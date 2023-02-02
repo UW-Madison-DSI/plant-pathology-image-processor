@@ -1,14 +1,36 @@
-import cv2
-from google.colab.patches import cv2_imshow
+# import packages
+import pandas as pd
+import numpy as np
+import os
+from PIL import Image
 
-# Read the TIFF image
-img = cv2.imread("Xg_irrigated_2.tif", cv2.IMREAD_UNCHANGED)
+def get_leaf(img):
+    hsv_img = img.convert('HSV')
+    hsv = np.array(hsv_img)
+    for dim1 in hsv:
+        for dim2 in dim1:
+            dim2[0] = 0
+            dim2[1] = 100
+    new_img = Image.fromarray(hsv, 'HSV')
+    return new_img.convert('RGB')
 
-# Convert the image to grayscale
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+if __name__ == '__main__':
 
-# Apply a binary threshold to the image
-_, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
+    # Using a Dataframe to save data to a CSV 
+    df = pd.DataFrame(columns=['image', 'leaf area', 'lesion area', 'percentage of leaf area'])
 
-# Display the image
-cv2_imshow(thresh)
+    # images folder path
+    folder_path = "./images/"
+
+    # process images
+    for image_name in os.listdir(folder_path):
+        print(f'Processing image: {image_name}')
+        image = Image.open(folder_path + image_name)
+        modified_image = get_leaf(image)
+        
+        # show the picture
+        modified_image.show()
+
+    # save calculations to output file
+
+    df.to_csv('output.csv', index=False)
