@@ -4,25 +4,14 @@ import numpy as np
 import os
 from PIL import Image
 from PIL import ImageFilter
+import json
 
 # Using a Dataframe to save data to a CSV 
 results_df = pd.DataFrame(columns=['image', 'leaf area', 'lesion area', 'percentage of leaf area'])
 
-settings = {
-    'background_colour': 'black_velvet',
-    'black_velvet': {
-        'input_folder_path': "./input_images/black_velvet/",
-        'output_folder_path': "./results/black_velvet/",
-        'leaf_area': {'min_hue': 50, 'max_hue': 100, 'min_saturation': 0, 'max_saturation': 255, 'min_value': 60, 'max_value': 255},
-        'lesion_area': {'min_hue': 45, 'max_hue': 100, 'min_saturation': 0, 'max_saturation': 255, 'min_value': 140, 'max_value': 255},
-        },
-    'grey_background': {
-        'input_folder_path': "./input_images/grey_background/",
-        'output_folder_path': "./results/grey_background/",
-        'leaf_area': {'min_hue': 20, 'max_hue': 100, 'min_saturation': 20, 'max_saturation': 255, 'min_value': 60, 'max_value': 255},
-        'lesion_area': {'min_hue': 20, 'max_hue': 100, 'min_saturation': 20, 'max_saturation': 255, 'min_value': 120, 'max_value': 255},
-        }
-    }
+# Read in settings from JSON file
+with open('settings.json') as f:
+    settings = json.load(f)
 
 def get_leaf_area_binary(img):
     '''
@@ -80,8 +69,8 @@ if __name__ == '__main__':
     settings['background_colour'] = input('What is the background colour? (black_velvet or grey_background) ')
 
     # paths used
-    input_folder_path = "./input_images/" + settings['background_colour'] + "/"
-    output_folder_path = "./results/" + settings['background_colour'] + "/"
+    input_folder_path = settings[settings['background_colour']]['input_folder_path']
+    output_folder_path = settings[settings['background_colour']]['output_folder_path']
 
     # process images
     for image_name in os.listdir(input_folder_path):
