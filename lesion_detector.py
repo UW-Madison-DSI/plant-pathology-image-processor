@@ -12,8 +12,20 @@ results_df = pd.DataFrame(columns=['image', 'leaf area', 'lesion area', 'percent
 # Read in settings from JSON file
 with open('settings.json') as f:
     settings = json.load(f)
+    
+def generate_report() -> None:
+    '''
+    This function generates a report in Markdown format.
+    '''
 
-def get_leaf_area_binary(img):
+    with open("output.md", "w") as file:
+        file.write("Image Name | Original image | Leaf area binary |  Non-lesion area binary | Percentage Area Affected |\n")
+        file.write(":---:|:---:|:---:|:---:|:---:\n")
+        for image_name in os.listdir(input_folder_path):
+            file.write(f"{image_name}|![](input_images/{image_name}) | ![](results/leaf_area_binaries/{image_name[:-4]}_leaf_area_binary.jpeg) | ![](results/lesion_area_binaries/{image_name[:-4]}_lesion_area_binary.jpeg)")
+            file.write(f" | {'%.2f'%results_df.loc[results_df['image'] == image_name, 'percentage of leaf area'].values[0]} %\n")
+
+def get_leaf_area_binary(img: Image) -> Image:
     '''
     This function takes an image as input and returns a binary image with the leaf area highlighted in white.
     '''
@@ -37,7 +49,7 @@ def get_leaf_area_binary(img):
 
     return new_img.convert('RGB')
 
-def get_lesion_area_binary(img):
+def get_lesion_area_binary(img: Image) -> Image:
     '''
     This function takes an image as input and returns a binary image with the non lesion area highlighted in white.
     i.e. the lesion area is black.
@@ -71,10 +83,10 @@ if __name__ == '__main__':
     # paths used
     input_folder_path = settings[settings['background_colour']]['input_folder_path']
     output_folder_path = settings[settings['background_colour']]['output_folder_path']
-
+    
     # process images
     for image_name in os.listdir(input_folder_path):
-        results_df = results_df.append({'image': image_name}, ignore_index=True)    
+        results_df = pd.concat([results_df, pd.DataFrame({'image': [image_name], 'leaf area': [0], 'lesion area': [0], 'percentage of leaf area': [0]})])  
         print(f'Processing image: {image_name}')
         get_leaf_area_binary(Image.open(input_folder_path + image_name)).save(output_folder_path+'leaf_area_binaries/' + f'{image_name[:-4]}_leaf_area_binary.jpeg')
         get_lesion_area_binary(Image.open(input_folder_path + image_name)).save(output_folder_path+'lesion_area_binaries/' + f'{image_name[:-4]}_lesion_area_binary.jpeg')
@@ -82,4 +94,5 @@ if __name__ == '__main__':
     # save calculations to output file
     results_df.to_csv(output_folder_path+'output.csv', index=False)
 
-    
+    # generate report
+    generate_report()
