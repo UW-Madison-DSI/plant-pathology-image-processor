@@ -13,7 +13,7 @@ results_df = pd.DataFrame(columns=['image', 'leaf area', 'lesion area', 'percent
 with open('settings.json') as f:
     settings = json.load(f)
     
-def generate_report():
+def generate_report() -> None:
     '''
     This function generates a report in Markdown format.
     '''
@@ -25,7 +25,7 @@ def generate_report():
             file.write(f"{image_name}|![](input_images/{image_name}) | ![](results/leaf_area_binaries/{image_name[:-4]}_leaf_area_binary.jpeg) | ![](results/lesion_area_binaries/{image_name[:-4]}_lesion_area_binary.jpeg)")
             file.write(f" | {'%.2f'%results_df.loc[results_df['image'] == image_name, 'percentage of leaf area'].values[0]} %\n")
 
-def get_leaf_area_binary(img):
+def get_leaf_area_binary(img: Image) -> Image:
     '''
     This function takes an image as input and returns a binary image with the leaf area highlighted in white.
     '''
@@ -49,7 +49,7 @@ def get_leaf_area_binary(img):
 
     return new_img.convert('RGB')
 
-def get_lesion_area_binary(img):
+def get_lesion_area_binary(img: Image) -> Image:
     '''
     This function takes an image as input and returns a binary image with the non lesion area highlighted in white.
     i.e. the lesion area is black.
