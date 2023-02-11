@@ -1,6 +1,8 @@
 # plant-pathology-image-processor
 extract information from plant pathlogy images
 
+![Demo](./demo.png)
+
 > Setup and Execution
 
 1. Create a virtual environment
