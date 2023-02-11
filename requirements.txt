@@ -1,4 +1,4 @@
-Pillow
+pillow
 pandas
 numpy
-markdown2pdf
+streamlit
