@@ -115,9 +115,9 @@ def get_lesion_area_binary(img: Image, image_name: str) -> Image:
 
 
 def process_image(image_file_name: str) -> None:
-    '''
+    """
     This function takes an image file name as input and saves the leaf area binary and lesion area binary to the output folder.
-    '''
+    """
 
     global results_df
 
