@@ -1,6 +1,9 @@
 # Project specific files to ignore
 *.jpeg
 *.tif
+*.csv
+*.zip
+binaries.zip
 !tests/fixtures/*
 
 # Byte-compiled / optimized / DLL files

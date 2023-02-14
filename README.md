@@ -1,6 +1,8 @@
 # plant-pathology-image-processor
 extract information from plant pathlogy images
 
+![Demo](./demo.png)
+
 > Setup and Execution
 
 1. Create a virtual environment
@@ -29,8 +31,3 @@ pip install -r requirements.txt
 ```bash
 python3 lesion_detector.py
 ```
-> Example
-
-Original image           | Leaf area binary           |  Non-lesion area binary
-:-------------------------:|:-------------------------:|:-------------------------:
-![Original image](./input_images/Xg_02_post.jpeg)  | ![Leaf area binary](./results/leaf_area_binaries/Xg_02_post._leaf_area_binary.jpeg)  |  ![Non-lesion area binary](results/lesion_area_binaries/Xg_02_post._lesion_area_binary.jpeg)
