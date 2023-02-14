@@ -8,28 +8,21 @@ input_folder_path = lesion_detector.settings["input_folder_path"]
 output_folder_path = lesion_detector.settings["output_folder_path"]
 
 
-def download_buttons() -> None:
+def download_results() -> None:
     """
     This function downloads the results of the image processing.
     """
     # Readying the data
-    csv_data = bytes(
-        lesion_detector.results_df.drop(["leaf area", "lesion area"], axis=1).to_csv(
-            index=False
-        ),
-        encoding="utf-8",
+    lesion_detector.results_df.drop(["leaf area", "lesion area"], axis=1).to_csv(
+        f"{output_folder_path}results.csv", index=False
     )
-    shutil.make_archive("binaries", "zip", output_folder_path)
+    shutil.make_archive("results", "zip", output_folder_path)
     # Add a download button
-    download_cols = st.columns(2)
-    download_cols[0].download_button(
-        "Download CSV Results", csv_data, file_name="results.csv", mime="text/csv"
-    )
-    with open("binaries.zip", "rb") as fp:
-        download_cols[1].download_button(
-            label="Download Binaries",
+    with open("results.zip", "rb") as fp:
+        st.download_button(
+            label="Download Results",
             data=fp,
-            file_name="binaries.zip",
+            file_name="results.zip",
             mime="application/zip",
         )
 
