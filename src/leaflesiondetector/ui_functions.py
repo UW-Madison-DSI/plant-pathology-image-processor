@@ -36,11 +36,13 @@ def process_uploaded_images() -> None:
     dir = os.listdir(input_folder_path)
     count = 0
     my_bar = st.progress(count)
+    start_time = time.time()
     for image_name in dir:
         count += 1
         lesion_detector.process_image(image_name)
         my_bar.progress(count / len(dir))
-
+    end_time = time.time()
+    st.markdown(f"#### Total run time: {'%.2f'%(end_time - start_time)} seconds")
     my_bar.empty()
 
 
@@ -60,7 +62,7 @@ def display_results() -> None:
             f"{output_folder_path}/lesion_area_binaries/{filename}_lesion_area_binary.jpeg"
         )
         cols[3].markdown(
-            f"#### {filename}\n ### {'%.2f'%lesion_detector.results_df.loc[lesion_detector.results_df['image'] == filename, 'percentage of leaf area'].values[0]} %"
+            f"#### {filename}\n ### {'%.2f'%lesion_detector.results_df.loc[lesion_detector.results_df['image'] == filename, 'percentage of leaf area'].values[0]} %\n ### {'%.2f'%lesion_detector.results_df.loc[lesion_detector.results_df['image'] == filename, 'run time'].values[0]} s"
         )
 
 

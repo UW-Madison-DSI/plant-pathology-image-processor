@@ -5,6 +5,7 @@ import os
 from PIL import Image
 from PIL import ImageFilter
 import json
+import time
 
 # File name and extension of the current image
 filename = None
@@ -12,7 +13,7 @@ file_extension = None
 
 # Using a Dataframe to save data to a CSV
 results_df = pd.DataFrame(
-    columns=["image", "leaf area", "lesion area", "percentage of leaf area"]
+    columns=["image", "leaf area", "lesion area", "percentage of leaf area", "run time"]
 )
 
 # Read in settings from JSON file
@@ -142,6 +143,8 @@ def process_image(image_file_name: str) -> None:
             ),
         ]
     )
+
+    start_time = time.time()
     img = Image.open(settings["input_folder_path"] + "/" + filename + file_extension)
     get_leaf_area_binary(img).save(
         settings["output_folder_path"]
@@ -153,3 +156,6 @@ def process_image(image_file_name: str) -> None:
         + "/lesion_area_binaries/"
         + f"{filename}_lesion_area_binary.jpeg"
     )
+    run_time = time.time() - start_time
+
+    results_df.loc[results_df["image"] == filename, "run time"] = run_time
