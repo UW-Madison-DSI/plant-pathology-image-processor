@@ -5,6 +5,7 @@ import time
 if "process" not in st.session_state:
     st.session_state["process"] = False
 
+st.set_page_config(layout='wide')
 st.title(":fallen_leaf: Plant Pathology Image Processor")
 st.write(
     "This app will process images of plant leaves and calculate the percentage of leaf area affected by disease."
