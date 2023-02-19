@@ -1,7 +1,5 @@
 import os
-# import sys
-# sys.path.append(os.path.realpath('../'))
-from lesion_detector import settings, process_image
+from leaflesiondetector import settings, process_image
 import shutil
 from PIL import Image, ImageChops
 
@@ -39,8 +37,5 @@ def output_consistency_test():
 
     return True
     
-    
-
-
 def test_answer():
     assert output_consistency_test() == True
