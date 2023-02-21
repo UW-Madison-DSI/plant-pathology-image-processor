@@ -17,7 +17,7 @@ results_df = pd.DataFrame(
 )
 
 # Read in settings from JSON file
-with open("settings.json") as f:
+with open("src/leaflesiondetector/settings.json") as f:
     settings = json.load(f)
 
 
