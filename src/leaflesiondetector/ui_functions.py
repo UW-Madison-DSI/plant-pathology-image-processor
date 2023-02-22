@@ -2,6 +2,9 @@ import streamlit as st
 import lesion_detector
 import os
 import shutil
+from PIL import Image
+import time
+from pathlib import Path
 
 # paths used
 input_folder_path = lesion_detector.settings["input_folder_path"]
@@ -14,7 +17,7 @@ def download_results() -> None:
     """
     # Readying the data
     lesion_detector.results_df.drop(["leaf area", "lesion area"], axis=1).to_csv(
-        f"{output_folder_path}results.csv", index=False
+        f"{output_folder_path}/results.csv", index=False
     )
     shutil.make_archive("results", "zip", output_folder_path)
     # Add a download button
@@ -31,14 +34,14 @@ def process_uploaded_images() -> None:
     """
     This function processes the uploaded images.
     """
-    dir = os.listdir(lesion_detector.settings["input_folder_path"])
-    count = 0
-    my_bar = st.progress(count)
-    for image_name in dir:
-        count += 1
+    dir = os.listdir(input_folder_path)
+    my_bar = st.progress(0)
+    start_time = time.time()
+    for i, image_name in enumerate(dir):
         lesion_detector.process_image(image_name)
-        my_bar.progress(count / len(dir))
-
+        my_bar.progress(i / len(dir))
+    end_time = time.time()
+    st.markdown(f"#### Total run time: {'%.2f'%(end_time - start_time)} seconds")
     my_bar.empty()
 
 
@@ -47,17 +50,19 @@ def display_results() -> None:
     This function displays the results of the image processing.
     """
 
-    for image_name in os.listdir(lesion_detector.settings["input_folder_path"]):
+    for image_name in os.listdir(input_folder_path):
+        image_file = Path(image_name)
+        filename, file_extension = image_file.stem, image_file.suffix
         cols = st.columns(4)
-        cols[0].image(f"{input_folder_path}/{image_name}")
+        cols[0].image(f"{input_folder_path}/{filename}{file_extension}")
         cols[1].image(
-            f"{output_folder_path}/leaf_area_binaries/{image_name[:-4]}_leaf_area_binary.jpeg"
+            f"{output_folder_path}/leaf_area_binaries/{filename}_leaf_area_binary.jpeg"
         )
         cols[2].image(
-            f"{output_folder_path}/lesion_area_binaries/{image_name[:-4]}_lesion_area_binary.jpeg"
+            f"{output_folder_path}/lesion_area_binaries/{filename}_lesion_area_binary.jpeg"
         )
         cols[3].markdown(
-            f"#### {image_name}\n ### {'%.2f'%lesion_detector.results_df.loc[lesion_detector.results_df['image'] == image_name, 'percentage of leaf area'].values[0]} %"
+            f"#### {filename}\n ### {'%.2f'%lesion_detector.results_df.loc[lesion_detector.results_df['image'] == filename, 'percentage of leaf area'].values[0]} %\n ### {'%.2f'%lesion_detector.results_df.loc[lesion_detector.results_df['image'] == filename, 'run time'].values[0]} s"
         )
 
 
@@ -75,16 +80,27 @@ def save_uploaded_files(uploaded_files: list) -> None:
     if os.path.exists(output_folder_path):
         shutil.rmtree(output_folder_path)
     os.makedirs(output_folder_path)
-    os.makedirs(output_folder_path + "leaf_area_binaries/")
-    os.makedirs(output_folder_path + "lesion_area_binaries/")
+    os.makedirs(output_folder_path + "/leaf_area_binaries/")
+    os.makedirs(output_folder_path + "/lesion_area_binaries/")
 
     for uploaded_file in uploaded_files:
+        
         file_bytes = uploaded_file.read()
         file_name = uploaded_file.name
 
+        image_upload_status = st.empty()
+        # Check if the image is usable
+        try:
+            Image.open(uploaded_file)
+        except:
+            image_upload_status.error(f"{uploaded_file.name} is not a valid image.")
+            time.sleep(2) # For Streamlit UI purposes
+            image_upload_status.empty()
+            return
+
         # Save the file to disk
         save_path = os.path.join(
-            lesion_detector.settings["input_folder_path"], file_name
+            input_folder_path, file_name
         )
         with open(save_path, "wb") as f:
             f.write(file_bytes)
