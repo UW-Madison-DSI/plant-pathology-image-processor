@@ -6,6 +6,7 @@ from PIL import Image
 from PIL import ImageFilter
 import json
 import time
+from pathlib import Path
 
 # File name and extension of the current image
 filename = None
@@ -13,7 +14,7 @@ file_extension = None
 
 # Using a Dataframe to save data to a CSV
 results_df = pd.DataFrame(
-    columns=["image", "leaf area", "lesion area", "percentage of leaf area", "run time"]
+    columns=["Image", "Leaf area", "Lesion area", "Percentage of leaf area", "Run time (seconds)"]
 )
 
 # Read in settings from JSON file
@@ -128,7 +129,8 @@ def process_image(image_file_name: str) -> None:
 
     global filename
     global file_extension 
-    filename, file_extension = os.path.splitext(image_file_name)
+    image_file = Path(image_file_name)
+    filename, file_extension = image_file.stem, image_file.suffix
 
     results_df = pd.concat(
         [
@@ -145,17 +147,17 @@ def process_image(image_file_name: str) -> None:
     )
 
     start_time = time.time()
-    img = Image.open(settings["input_folder_path"] + "/" + filename + file_extension)
-    get_leaf_area_binary(img).save(
-        settings["output_folder_path"]
-        + "/leaf_area_binaries/"
-        + f"{filename}_leaf_area_binary.jpeg"
-    )
-    get_lesion_area_binary(img).save(
-        settings["output_folder_path"]
-        + "/lesion_area_binaries/"
-        + f"{filename}_lesion_area_binary.jpeg"
-    )
+    with Image.open(Path(settings["input_folder_path"]) / image_file.name) as img:
+        get_leaf_area_binary(img).save(
+            settings["output_folder_path"]
+            + "/leaf_area_binaries/"
+            + f"{filename}_leaf_area_binary.jpeg"
+        )
+        get_lesion_area_binary(img).save(
+            settings["output_folder_path"]
+            + "/lesion_area_binaries/"
+            + f"{filename}_lesion_area_binary.jpeg"
+        )
     run_time = time.time() - start_time
 
     results_df.loc[results_df["image"] == filename, "run time"] = run_time

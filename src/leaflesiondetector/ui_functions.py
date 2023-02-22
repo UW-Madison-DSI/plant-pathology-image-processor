@@ -4,6 +4,7 @@ import os
 import shutil
 from PIL import Image
 import time
+from pathlib import Path
 
 # paths used
 input_folder_path = lesion_detector.settings["input_folder_path"]
@@ -34,13 +35,11 @@ def process_uploaded_images() -> None:
     This function processes the uploaded images.
     """
     dir = os.listdir(input_folder_path)
-    count = 0
-    my_bar = st.progress(count)
+    my_bar = st.progress(0)
     start_time = time.time()
-    for image_name in dir:
-        count += 1
+    for i, image_name in enumerate(dir):
         lesion_detector.process_image(image_name)
-        my_bar.progress(count / len(dir))
+        my_bar.progress(i / len(dir))
     end_time = time.time()
     st.markdown(f"#### Total run time: {'%.2f'%(end_time - start_time)} seconds")
     my_bar.empty()
@@ -52,7 +51,8 @@ def display_results() -> None:
     """
 
     for image_name in os.listdir(input_folder_path):
-        filename, file_extension = os.path.splitext(image_name)
+        image_file = Path(image_name)
+        filename, file_extension = image_file.stem, image_file.suffix
         cols = st.columns(4)
         cols[0].image(f"{input_folder_path}/{filename}{file_extension}")
         cols[1].image(
@@ -94,7 +94,7 @@ def save_uploaded_files(uploaded_files: list) -> None:
             Image.open(uploaded_file)
         except:
             image_upload_status.error(f"{uploaded_file.name} is not a valid image.")
-            time.sleep(2)
+            time.sleep(2) # For Streamlit UI purposes
             image_upload_status.empty()
             return
 

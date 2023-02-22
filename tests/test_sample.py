@@ -39,3 +39,4 @@ def output_consistency_test():
     
 def test_answer():
     assert output_consistency_test() == True
+    
