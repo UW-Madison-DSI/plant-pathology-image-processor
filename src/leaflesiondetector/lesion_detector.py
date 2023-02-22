@@ -22,25 +22,6 @@ with open("src/leaflesiondetector/settings.json") as f:
     settings = json.load(f)
 
 
-# def generate_report(input_folder_path: str) -> None:
-#     """
-#     This function generates a report in Markdown format.
-#     """
-
-#     with open("output.md", "w") as file:
-#         file.write(
-#             "Image Name | Original image | Leaf area binary |  Non-lesion area binary | Percentage Area Affected |\n"
-#         )
-#         file.write(":---:|:---:|:---:|:---:|:---:\n")
-#         for image_name in os.listdir(input_folder_path):
-#             file.write(
-#                 f"{image_name}|![](input_images/{image_name}) | ![](results/leaf_area_binaries/{image_name[:-4]}_leaf_area_binary.jpeg) | ![](results/lesion_area_binaries/{image_name[:-4]}_lesion_area_binary.jpeg)"
-#             )
-#             file.write(
-#                 f" | {'%.2f'%results_df.loc[results_df['image'] == image_name, 'percentage of leaf area'].values[0]} %\n"
-#             )
-
-
 def get_leaf_area_binary(img: Image) -> Image:
     """
     This function takes an image as input and returns a binary image with the leaf area highlighted in white.
