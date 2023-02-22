@@ -3,6 +3,7 @@ name = "leaflesiondetector"
 version = "0.0.1"
 authors = [
   { name="Arjun Iyer", email="iyer9@wisc.edu" },
+  { name="Iain L. McConnell", email="lesion.detector@gmail.com" },
 ]
 description = "A small example package"
 readme = "README.md"
