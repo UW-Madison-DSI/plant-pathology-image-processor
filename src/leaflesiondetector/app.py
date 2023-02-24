@@ -5,8 +5,18 @@ import time
 if "process" not in st.session_state:
     st.session_state["process"] = False
 
-st.set_page_config(layout='wide')
-st.title(":fallen_leaf: Plant Pathology Image Processor")
+if "res_updated" not in st.session_state:
+    st.session_state["res_updated"] = False
+
+if "maintain" not in st.session_state:
+    st.session_state["maintain"] = False
+
+st.set_page_config(
+        page_title="Leaf Lesion Detector",
+        page_icon=":fallen_leaf:",
+        layout='wide'
+)
+st.title(":fallen_leaf: Leaf Lesion Detector")
 st.write(
     "This app will process images of plant leaves and calculate the percentage of leaf area affected by disease."
 )
@@ -24,6 +34,15 @@ with st.form("my-form", clear_on_submit=True):
         upload_status.error("Please upload at least one image.")
         time.sleep(2)
         upload_status.empty()
+
+if st.session_state["res_updated"] == True:
+    ui_functions.download_results()
+    ui_functions.display_results()
+    st.session_state["res_updated"] = False
+
+if st.session_state["maintain"] == True:
+    ui_functions.download_results()
+    ui_functions.display_results()
 
 if st.session_state["process"] == True:
     ui_functions.process_uploaded_images()

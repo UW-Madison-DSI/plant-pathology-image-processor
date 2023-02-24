@@ -1,8 +1,61 @@
 import os
-from leaflesiondetector import settings, process_image
+from leaflesiondetector import settings, process_image, get_leaf_area_binary, get_lesion_area_binary
 import shutil
 from PIL import Image, ImageChops
 
+# Unit test for the get_leaf_area_binary function
+def test_get_leaf_area_binary():
+    '''
+    Tests the get_leaf_area_binary function to ensure
+    the function is not breaking.
+    '''
+    # Create a test pillow image
+    test_img = Image.new("RGB", (4, 4))
+    # Pass the test image to the function
+    try:
+        test_img = get_leaf_area_binary(test_img)
+    except Exception as e:
+        assert False
+    # Check the output is a pillow image
+    assert isinstance(test_img, Image.Image)
+    
+# Unit test for get_lesion_area_binary function
+def test_get_lesion_area_binary():
+    '''
+    Tests the get_lesion_area_binary function to ensure
+    the function is not breaking.
+    '''
+    # Create a test pillow image
+    test_img = Image.new("RGB", (4, 4))
+    # Pass the test image to the function
+    try:
+        test_img = get_lesion_area_binary(test_img)
+    except Exception as e:
+        assert False
+    # Check the output is a pillow image
+    assert isinstance(test_img, Image.Image)
+
+# Unit test for process_image function
+def test_process_image():
+    '''
+    Tests the process_image function to ensure
+    the function is not breaking.
+    '''
+    # Modify settings.json to use the test images
+    settings["input_folder_path"] = "tests/fixtures/input_images/"
+    settings["output_folder_path"] = "tests/fixtures/new_output_images/"
+    # Make temporary output folders
+    os.makedirs(settings["output_folder_path"])
+    os.makedirs(settings["output_folder_path"] + "leaf_area_binaries/")
+    os.makedirs(settings["output_folder_path"] + "lesion_area_binaries/")
+    # Process and check one test image
+    try:
+        process_image("Xg_01_post.jpeg")
+    except Exception as e:
+        assert False
+    assert os.path.exists(settings["output_folder_path"] + "leaf_area_binaries/Xg_01_post_leaf_area_binary.jpeg") and os.path.exists(settings["output_folder_path"] + "lesion_area_binaries/Xg_01_post_lesion_area_binary.jpeg")
+
+# Integration test
 def output_consistency_test():
     '''
     This function tests the consistency of the image output to determine whether
