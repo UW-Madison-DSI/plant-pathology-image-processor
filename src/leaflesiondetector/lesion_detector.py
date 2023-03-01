@@ -8,27 +8,30 @@ import json
 import time
 from pathlib import Path
 
-# File name and extension of the current image
-filename = None
-file_extension = None
-
-# Using a Dataframe to save data to a CSV
-results_df = pd.DataFrame(
-    columns=["Image", "Percentage of leaf area", "Run time (seconds)"]
-)
-
 # Read in settings from JSON file
 with open("src/leaflesiondetector/settings.json") as f:
     settings = json.load(f)
 
+class Leaf:
+    def __init__(self, name: str, img: Image):
+        self.name = name
+        self.img = img
+        self.leaf_binary = None
+        self.lesion_binary = None
+        self.leaf_area = 0
+        self.lesion_area = 0
+        self.lesion_area_percentage = 0
+        self.run_time = 0
+        self.intensity_threshold = settings[settings["background_colour"]]["lesion_area"]["min_value"]
 
-def get_leaf_area_binary(img: Image) -> Image:
+
+def get_leaf_area_binary(leaf: Leaf) -> None:
     """
     This function takes an image as input and returns a binary image with the leaf area highlighted in white.
     """
 
     # Convert to HSV
-    hsv_img = img.convert("HSV")
+    hsv_img = leaf.img.convert("HSV")
     hsv = np.array(hsv_img)
 
     # Create a mask of green regions
@@ -51,21 +54,19 @@ def get_leaf_area_binary(img: Image) -> Image:
     new_img = new_img.filter(ImageFilter.MedianFilter(5))
 
     # Save leaf size to dataframe
-    results_df.loc[results_df["Image"] == filename, "leaf area"] = np.sum(
-        min_hues * max_hues * saturation * values
-    )
+    leaf.leaf_area = np.sum(min_hues * max_hues * saturation * values)
 
-    return new_img.convert("RGB")
+    leaf.leaf_binary = new_img.convert("RGB").copy()
 
 
-def get_lesion_area_binary(img: Image) -> Image:
+def get_lesion_area_binary(leaf: Leaf) -> None:
     """
     This function takes an image as input and returns a binary image with the non lesion area highlighted in white.
     i.e. the lesion area is black.
     """
 
     # Convert to HSV
-    hsv_img = img.convert("HSV")
+    hsv_img = leaf.img.convert("HSV")
     hsv = np.array(hsv_img)
 
     # Create a mask of lesions
@@ -88,24 +89,17 @@ def get_lesion_area_binary(img: Image) -> Image:
     # Remove noise
     new_img = new_img.filter(ImageFilter.MedianFilter(5))
 
-    # Save lesion size to dataframe
-    results_df.loc[results_df["Image"] == filename, "lesion area"] = results_df.loc[
-        results_df["Image"] == filename, "leaf area"
-    ] - np.sum(min_hues * max_hues * saturation * values)
-    results_df.loc[results_df["Image"] == filename, "Percentage of leaf area"] = (
-        100
-        * results_df.loc[results_df["Image"] == filename, "lesion area"]
-        / results_df.loc[results_df["Image"] == filename, "leaf area"]
-    )
+    # Save lesion size and percentage
+    leaf.lesion_area = leaf.leaf_area - np.sum(min_hues * max_hues * saturation * values)
+    leaf.lesion_area_percentage = 100*leaf.lesion_area/leaf.leaf_area
 
-    return new_img.convert("RGB")
+    leaf.lesion_binary =  new_img.convert("RGB").copy()
 
-def set_custom_params(custom_params: dict) -> None:
+def set_custom_params(intensity_threshold: int) -> None:
     """
     This function takes a dictionary of custom parameters as input and updates the settings dictionary.
     """
-    for key, value in custom_params.items():
-        settings[settings['background_colour']]['lesion_area'][key] = value
+    settings[settings['background_colour']]['lesion_area']['min_value'] = intensity_threshold
 
 def reset_params() -> None:
     """
@@ -116,47 +110,18 @@ def reset_params() -> None:
         settings = json.load(f)
 
 
-def process_image(image_file_name: str, custom_params: dict={}) -> None:
+def process_image(leaf: Leaf) -> None:
     """
     This function takes an image file name as input and saves the leaf area binary and lesion area binary to the output folder.
     """
 
-    global results_df
-
-    global filename
-    global file_extension 
-    image_file = Path(image_file_name)
-    filename, file_extension = image_file.stem, image_file.suffix
-
-    if custom_params:
-        set_custom_params(custom_params)
-    else:
-        results_df = pd.concat(
-            [
-                results_df,
-                pd.DataFrame(
-                    {
-                        "Image": [filename],
-                        "Percentage of leaf area": [0],
-                    }
-                ),
-            ]
-        )
+    if leaf.intensity_threshold != settings[settings['background_colour']]['lesion_area']['min_value']:
+        print(f'\n\nSetting custom parameters, current thresh: {leaf.intensity_threshold}\n\n')
+        set_custom_params(leaf.intensity_threshold)
 
     start_time = time.time()
-    with Image.open(Path(settings["input_folder_path"]) / image_file.name) as img:
-        get_leaf_area_binary(img).save(
-            settings["output_folder_path"]
-            + "/leaf_area_binaries/"
-            + f"{filename}_leaf_area_binary.jpeg"
-        )
-        get_lesion_area_binary(img).save(
-            settings["output_folder_path"]
-            + "/lesion_area_binaries/"
-            + f"{filename}_lesion_area_binary.jpeg"
-        )
-    run_time = time.time() - start_time
-
-    results_df.loc[results_df["Image"] == filename, "Run time (seconds)"] = run_time
+    get_leaf_area_binary(leaf)
+    get_lesion_area_binary(leaf)
+    leaf.run_time = time.time() - start_time
 
     reset_params()
