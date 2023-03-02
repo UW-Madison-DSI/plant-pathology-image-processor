@@ -1,12 +1,9 @@
 # import packages
-import pandas as pd
 import numpy as np
-import os
 from PIL import Image
 from PIL import ImageFilter
 import json
 import time
-from pathlib import Path
 
 # Read in settings from JSON file
 with open("src/leaflesiondetector/settings.json") as f:
