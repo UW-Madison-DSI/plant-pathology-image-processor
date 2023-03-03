@@ -23,9 +23,10 @@ def download_results() -> None:
     """
     This function downloads the results of the image processing.
     """
-    os.mkdir(output_folder_path)
-    os.mkdir(output_folder_path + "/leaf_area_binaries/")
-    os.mkdir(output_folder_path + "/lesion_area_binaries/")
+    if not os.path.exists(output_folder_path):
+        os.mkdir(output_folder_path)
+        os.mkdir(output_folder_path + "/leaf_area_binaries/")
+        os.mkdir(output_folder_path + "/lesion_area_binaries/")
     # Readying the data
     res_df = pd.DataFrame(columns=["Image", "Percentage area", "Run time (seconds)", "Intensity threshold"])
     for leaf in leaves:
