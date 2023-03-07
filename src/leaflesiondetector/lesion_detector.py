@@ -14,7 +14,7 @@ file_extension = None
 
 # Using a Dataframe to save data to a CSV
 results_df = pd.DataFrame(
-    columns=["Image", "Leaf area", "Lesion area", "Percentage of leaf area", "Run time (seconds)"]
+    columns=["Image", "Percentage of leaf area", "Run time (seconds)"]
 )
 
 # Read in settings from JSON file
@@ -51,7 +51,7 @@ def get_leaf_area_binary(img: Image) -> Image:
     new_img = new_img.filter(ImageFilter.MedianFilter(5))
 
     # Save leaf size to dataframe
-    results_df.loc[results_df["image"] == filename, "leaf area"] = np.sum(
+    results_df.loc[results_df["Image"] == filename, "leaf area"] = np.sum(
         min_hues * max_hues * saturation * values
     )
 
@@ -89,19 +89,34 @@ def get_lesion_area_binary(img: Image) -> Image:
     new_img = new_img.filter(ImageFilter.MedianFilter(5))
 
     # Save lesion size to dataframe
-    results_df.loc[results_df["image"] == filename, "lesion area"] = results_df.loc[
-        results_df["image"] == filename, "leaf area"
+    results_df.loc[results_df["Image"] == filename, "lesion area"] = results_df.loc[
+        results_df["Image"] == filename, "leaf area"
     ] - np.sum(min_hues * max_hues * saturation * values)
-    results_df.loc[results_df["image"] == filename, "percentage of leaf area"] = (
+    results_df.loc[results_df["Image"] == filename, "Percentage of leaf area"] = (
         100
-        * results_df.loc[results_df["image"] == filename, "lesion area"]
-        / results_df.loc[results_df["image"] == filename, "leaf area"]
+        * results_df.loc[results_df["Image"] == filename, "lesion area"]
+        / results_df.loc[results_df["Image"] == filename, "leaf area"]
     )
 
     return new_img.convert("RGB")
 
+def set_custom_params(custom_params: dict) -> None:
+    """
+    This function takes a dictionary of custom parameters as input and updates the settings dictionary.
+    """
+    for key, value in custom_params.items():
+        settings[settings['background_colour']]['lesion_area'][key] = value
 
-def process_image(image_file_name: str) -> None:
+def reset_params() -> None:
+    """
+    This function resets the settings dictionary to the default values.
+    """
+    global settings
+    with open("src/leaflesiondetector/settings.json") as f:
+        settings = json.load(f)
+
+
+def process_image(image_file_name: str, custom_params: dict={}) -> None:
     """
     This function takes an image file name as input and saves the leaf area binary and lesion area binary to the output folder.
     """
@@ -113,19 +128,20 @@ def process_image(image_file_name: str) -> None:
     image_file = Path(image_file_name)
     filename, file_extension = image_file.stem, image_file.suffix
 
-    results_df = pd.concat(
-        [
-            results_df,
-            pd.DataFrame(
-                {
-                    "image": [filename],
-                    "leaf area": [0],
-                    "lesion area": [0],
-                    "percentage of leaf area": [0],
-                }
-            ),
-        ]
-    )
+    if custom_params:
+        set_custom_params(custom_params)
+    else:
+        results_df = pd.concat(
+            [
+                results_df,
+                pd.DataFrame(
+                    {
+                        "Image": [filename],
+                        "Percentage of leaf area": [0],
+                    }
+                ),
+            ]
+        )
 
     start_time = time.time()
     with Image.open(Path(settings["input_folder_path"]) / image_file.name) as img:
@@ -141,4 +157,6 @@ def process_image(image_file_name: str) -> None:
         )
     run_time = time.time() - start_time
 
-    results_df.loc[results_df["image"] == filename, "run time"] = run_time
+    results_df.loc[results_df["Image"] == filename, "Run time (seconds)"] = run_time
+
+    reset_params()

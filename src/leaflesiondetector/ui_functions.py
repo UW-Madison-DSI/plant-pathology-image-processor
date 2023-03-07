@@ -10,6 +10,11 @@ from pathlib import Path
 input_folder_path = lesion_detector.settings["input_folder_path"]
 output_folder_path = lesion_detector.settings["output_folder_path"]
 
+def maintain_results() -> None:
+    """
+    This function maintains the results.
+    """
+    st.session_state["maintain"] = True
 
 def download_results() -> None:
     """
@@ -27,6 +32,7 @@ def download_results() -> None:
             data=fp,
             file_name="results.zip",
             mime="application/zip",
+            on_click=maintain_results,
         )
 
 
@@ -39,7 +45,7 @@ def process_uploaded_images() -> None:
     start_time = time.time()
     for i, image_name in enumerate(dir):
         lesion_detector.process_image(image_name)
-        my_bar.progress(i / len(dir))
+        my_bar.progress((i+1 )/ len(dir))
     end_time = time.time()
     st.markdown(f"#### Total run time: {'%.2f'%(end_time - start_time)} seconds")
     my_bar.empty()
@@ -62,9 +68,14 @@ def display_results() -> None:
             f"{output_folder_path}/lesion_area_binaries/{filename}_lesion_area_binary.jpeg"
         )
         cols[3].markdown(
-            f"#### {filename}\n ### {'%.2f'%lesion_detector.results_df.loc[lesion_detector.results_df['image'] == filename, 'percentage of leaf area'].values[0]} %\n ### {'%.2f'%lesion_detector.results_df.loc[lesion_detector.results_df['image'] == filename, 'run time'].values[0]} s"
+            f"#### {filename}\n ### {'%.2f'%lesion_detector.results_df.loc[lesion_detector.results_df['Image'] == filename, 'Percentage of leaf area'].values[0]} %\n ### {'%.2f'%lesion_detector.results_df.loc[lesion_detector.results_df['Image'] == filename, 'Run time (seconds)'].values[0]} s"
         )
+        cols[3].number_input('Adjust detection intensity range', min_value=0, max_value=255, value=lesion_detector.settings[lesion_detector.settings['background_colour']]['lesion_area']['min_value'], step=5, key=filename, on_change=update_result, args=[filename, file_extension])
 
+def update_result(filename, file_extension) -> None:
+    st.session_state["maintain"] = False
+    lesion_detector.process_image(filename+file_extension, {'min_value': st.session_state[filename]})
+    st.session_state["res_updated"] = True
 
 def save_uploaded_files(uploaded_files: list) -> None:
     """
