@@ -5,46 +5,32 @@ import shutil
 from PIL import Image
 import time
 from pathlib import Path
-import pandas as pd
-
-leaves = []
-
-# paths used
-input_folder_path = lesion_detector.settings["input_folder_path"]
-output_folder_path = lesion_detector.settings["output_folder_path"]
+from leaf import Leaf
+import tempfile
+import time
 
 def maintain_results() -> None:
     """
     This function maintains the results.
     """
-    st.session_state["maintain"] = True
+    st.session_state["process"] = True
 
-def download_results() -> None:
+def download_results(leaves: list) -> None:
     """
     This function downloads the results of the image processing.
     """
-    if not os.path.exists(output_folder_path):
-        os.mkdir(output_folder_path)
-        os.mkdir(output_folder_path + "/leaf_area_binaries/")
-        os.mkdir(output_folder_path + "/lesion_area_binaries/")
-    # Readying the data
-    res_df = pd.DataFrame(columns=["Image", "Percentage area", "Run time (seconds)", "Intensity threshold"])
-    for leaf in leaves:
-        res_df = res_df.append(
-            {
-                "Image": leaf.name,
-                "Percentage area": leaf.lesion_area_percentage,
-                "Run time (seconds)": leaf.run_time,
-                "Intensity threshold": leaf.intensity_threshold,
-            },
-            ignore_index=True,
-        )
-        leaf.leaf_binary.save(output_folder_path + "/leaf_area_binaries/" + f"{Path(leaf.name).stem}_leaf_area_binary{Path(leaf.name).suffix}")
-        leaf.lesion_binary.save(output_folder_path + "/lesion_area_binaries/" + f"{Path(leaf.name).stem}_lesion_area_binary{Path(leaf.name).suffix}")
-    res_df.to_csv(output_folder_path + "/results.csv", index=False)
+    # Create a temporary directory to store the results
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        os.mkdir(tmpdirname + "/leaf_area_binaries/")
+        os.mkdir(tmpdirname + "/lesion_area_binaries/")
+        with open(f'{tmpdirname}/results.csv','w') as f:
+            f.write("Image,Percentage area,Run time (seconds),Intensity threshold\n")
+            for leaf in leaves:
+                f.write(f"{leaf.name},{leaf.lesion_area_percentage},{leaf.run_time},{leaf.intensity_threshold}\n")
+                leaf.leaf_binary.save(tmpdirname + "/leaf_area_binaries/" + f"{Path(leaf.name).stem}_leaf_area_binary{Path(leaf.name).suffix}")
+                leaf.lesion_binary.save(tmpdirname + "/lesion_area_binaries/" + f"{Path(leaf.name).stem}_lesion_area_binary{Path(leaf.name).suffix}")
+        shutil.make_archive('results', 'zip', tmpdirname)
 
-    shutil.make_archive("results", "zip", output_folder_path)
-    shutil.rmtree(output_folder_path)
     # Add a download button
     with open("results.zip", "rb") as fp:
         st.download_button(
@@ -56,7 +42,7 @@ def download_results() -> None:
         )
 
 
-def process_uploaded_images() -> None:
+def process_uploaded_images(leaves: list) -> None:
     """
     This function processes the uploaded images.
     """
@@ -69,8 +55,10 @@ def process_uploaded_images() -> None:
     st.markdown(f"#### Total run time: {'%.2f'%(end_time - start_time)} seconds")
     my_bar.empty()
 
+    st.session_state["process"] = True
 
-def display_results() -> None:
+
+def display_results(leaves: list) -> None:
     """
     This function displays the results of the image processing.
     """
@@ -83,19 +71,18 @@ def display_results() -> None:
         cols[3].markdown(
             f"#### {leaf.name}\n ### {'%.2f'%leaf.lesion_area_percentage} %\n ### {'%.2f'%leaf.run_time} s"
         )
-        cols[3].number_input('Adjust detection intensity range', min_value=0, max_value=255, value=leaf.intensity_threshold, step=5, key=leaf.name, on_change=update_result, args=[leaf])
+        cols[3].number_input('Adjust detection intensity range', min_value=0, max_value=255, value=leaf.intensity_threshold, step=5, key=leaf.key, on_change=update_result, args=[leaf])
 
 def update_result(leaf) -> None:
     st.session_state["maintain"] = False
-    leaf.intensity_threshold = st.session_state[leaf.name]
+    leaf.intensity_threshold = st.session_state[leaf.key]
     lesion_detector.process_image(leaf)
     st.session_state["res_updated"] = True
 
-def save_uploaded_files(uploaded_files: list) -> None:
+def save_uploaded_files(uploaded_files: list, leaves: list) -> None:
     """
     This function saves the uploaded files to disk.
     """
-    leaves.clear()
 
     for uploaded_file in uploaded_files:
 
@@ -111,6 +98,4 @@ def save_uploaded_files(uploaded_files: list) -> None:
 
         # Save the file to disk
         with Image.open(uploaded_file) as img:
-            leaves.append(lesion_detector.Leaf(uploaded_file.name, img.copy()))
-
-    st.session_state["process"] = True
+            leaves.append(Leaf(f"{uploaded_file.name}_{int(time.time_ns())}", uploaded_file.name, img.copy()))

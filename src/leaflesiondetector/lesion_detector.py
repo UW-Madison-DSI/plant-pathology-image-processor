@@ -4,23 +4,11 @@ from PIL import Image
 from PIL import ImageFilter
 import json
 import time
+from leaf import Leaf
 
 # Read in settings from JSON file
 with open("src/leaflesiondetector/settings.json") as f:
     settings = json.load(f)
-
-class Leaf:
-    def __init__(self, name: str, img: Image):
-        self.name = name
-        self.img = img
-        self.leaf_binary = None
-        self.lesion_binary = None
-        self.leaf_area = 0
-        self.lesion_area = 0
-        self.lesion_area_percentage = 0
-        self.run_time = 0
-        self.intensity_threshold = settings[settings["background_colour"]]["lesion_area"]["min_value"]
-
 
 def get_leaf_area_binary(leaf: Leaf) -> None:
     """
@@ -113,7 +101,6 @@ def process_image(leaf: Leaf) -> None:
     """
 
     if leaf.intensity_threshold != settings[settings['background_colour']]['lesion_area']['min_value']:
-        print(f'\n\nSetting custom parameters, current thresh: {leaf.intensity_threshold}\n\n')
         set_custom_params(leaf.intensity_threshold)
 
     start_time = time.time()
