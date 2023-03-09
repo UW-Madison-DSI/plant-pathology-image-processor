@@ -66,7 +66,7 @@ def test_process_image():
 
 # Integration test
 @pytest.mark.parametrize("image_name", os.listdir("./tests/fixtures/input_images/"))
-def test_output_consistency(image_name):
+def test_pipeline_produces_expected_output(image_name):
     """
     This function tests the consistency of the image output to determine whether
     the changes made to the code affect the base functionality of the image processor.

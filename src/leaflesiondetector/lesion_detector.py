@@ -4,7 +4,7 @@ from PIL import Image
 from PIL import ImageFilter
 import json
 import time
-from leaf import Leaf
+from leaflesiondetector.leaf import Leaf
 
 # Read in settings from JSON file
 with open("src/leaflesiondetector/settings.json") as f:
