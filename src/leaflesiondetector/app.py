@@ -10,11 +10,9 @@ if "process" not in st.session_state:
     st.session_state["process"] = False
 
 st.set_page_config(
-        page_title="Leaf Lesion Detector",
-        page_icon=":fallen_leaf:",
-        layout='wide'
+    page_title="Leaf Lesion Detector", page_icon=":leaves:", layout="wide"
 )
-st.title(":fallen_leaf: Leaf Lesion Detector")
+st.title(":leaves: Leaf Lesion Detector")
 st.write(
     "This app will process images of plant leaves and calculate the percentage of leaf area affected by disease."
 )
@@ -28,10 +26,12 @@ with st.form("my-form", clear_on_submit=True):
     if (len(uploaded_files) > 0) and submitted:
         st.session_state["leaves"] = LeafList()
         st.session_state["maintain"] = False
-        ui_functions.save_uploaded_files(uploaded_files, st.session_state["leaves"].leaves)
+        ui_functions.save_uploaded_files(
+            uploaded_files, st.session_state["leaves"].leaves
+        )
         st.session_state["process"] = True
     elif (len(uploaded_files) == 0) and submitted:
-        st.session_state["process"] = False
+        st.session_state["process"] = False  # For Streamlit UI behaviour
         upload_status.error("Please upload at least one image.")
         time.sleep(2)
         upload_status.empty()

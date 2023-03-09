@@ -8,12 +8,23 @@ from pathlib import Path
 from leaf import Leaf
 import tempfile
 import time
+from streamlit_lottie import st_lottie_spinner
+import requests
+
+
+def load_lottieurl(url: str):
+    r = requests.get(url)
+    if r.status_code != 200:
+        return None
+    return r.json()
+
 
 def maintain_results() -> None:
     """
     This function maintains the results.
     """
     st.session_state["process"] = True
+
 
 def download_results(leaves: list) -> None:
     """
@@ -23,13 +34,23 @@ def download_results(leaves: list) -> None:
     with tempfile.TemporaryDirectory() as tmpdirname:
         os.mkdir(tmpdirname + "/leaf_area_binaries/")
         os.mkdir(tmpdirname + "/lesion_area_binaries/")
-        with open(f'{tmpdirname}/results.csv','w') as f:
+        with open(f"{tmpdirname}/results.csv", "w") as f:
             f.write("Image,Percentage area,Run time (seconds),Intensity threshold\n")
             for leaf in leaves:
-                f.write(f"{leaf.name},{leaf.lesion_area_percentage},{leaf.run_time},{leaf.intensity_threshold}\n")
-                leaf.leaf_binary.save(tmpdirname + "/leaf_area_binaries/" + f"{Path(leaf.name).stem}_leaf_area_binary{Path(leaf.name).suffix}")
-                leaf.lesion_binary.save(tmpdirname + "/lesion_area_binaries/" + f"{Path(leaf.name).stem}_lesion_area_binary{Path(leaf.name).suffix}")
-        shutil.make_archive('results', 'zip', tmpdirname)
+                f.write(
+                    f"{leaf.name},{leaf.lesion_area_percentage},{leaf.run_time},{leaf.minimum_lesion_area_value}\n"
+                )
+                leaf.leaf_binary.save(
+                    tmpdirname
+                    + "/leaf_area_binaries/"
+                    + f"{Path(leaf.name).stem}_leaf_area_binary{Path(leaf.name).suffix}"
+                )
+                leaf.lesion_binary.save(
+                    tmpdirname
+                    + "/lesion_area_binaries/"
+                    + f"{Path(leaf.name).stem}_lesion_area_binary{Path(leaf.name).suffix}"
+                )
+        shutil.make_archive("results", "zip", tmpdirname)
 
     # Add a download button
     with open("results.zip", "rb") as fp:
@@ -46,12 +67,20 @@ def process_uploaded_images(leaves: list) -> None:
     """
     This function processes the uploaded images.
     """
-    my_bar = st.progress(0)
+    my_bar = st.progress(0, "Running...")
     start_time = time.time()
-    for i,leaf in enumerate(leaves):
-        lesion_detector.process_image(leaf)
-        my_bar.progress((i+1 )/ len(leaves))
-    end_time = time.time()
+    # https://assets4.lottiefiles.com/packages/lf20_vcxeqptb.json
+    # https://assets4.lottiefiles.com/packages/lf20_XIIxSb.json
+    with st_lottie_spinner(
+        load_lottieurl("https://assets4.lottiefiles.com/packages/lf20_XIIxSb.json"),
+        key="download",
+        speed=0.5,
+        loop=True,
+    ):
+        for i, leaf in enumerate(leaves):
+            lesion_detector.process_image(leaf)
+            my_bar.progress((i + 1) / len(leaves), f"{leaf.name}...")
+        end_time = time.time()
     st.markdown(f"#### Total run time: {'%.2f'%(end_time - start_time)} seconds")
     my_bar.empty()
 
@@ -71,13 +100,22 @@ def display_results(leaves: list) -> None:
         cols[3].markdown(
             f"#### {leaf.name}\n ### {'%.2f'%leaf.lesion_area_percentage} %\n ### {'%.2f'%leaf.run_time} s"
         )
-        cols[3].number_input('Adjust detection intensity range', min_value=0, max_value=255, value=leaf.intensity_threshold, step=5, key=leaf.key, on_change=update_result, args=[leaf])
+        cols[3].number_input(
+            "Adjust detection intensity range",
+            min_value=0,
+            max_value=255,
+            value=leaf.minimum_lesion_area_value,
+            step=5,
+            key=leaf.key,
+            on_change=update_result,
+            args=[leaf],
+        )
+
 
 def update_result(leaf) -> None:
-    st.session_state["maintain"] = False
-    leaf.intensity_threshold = st.session_state[leaf.key]
+    leaf.minimum_lesion_area_value = st.session_state[leaf.key]
     lesion_detector.process_image(leaf)
-    st.session_state["res_updated"] = True
+
 
 def save_uploaded_files(uploaded_files: list, leaves: list) -> None:
     """
@@ -92,10 +130,16 @@ def save_uploaded_files(uploaded_files: list, leaves: list) -> None:
             Image.open(uploaded_file)
         except:
             image_upload_status.error(f"{uploaded_file.name} is not a valid image.")
-            time.sleep(2) # For Streamlit UI purposes
+            time.sleep(2)  # For Streamlit UI purposes
             image_upload_status.empty()
             return
 
         # Save the file to disk
         with Image.open(uploaded_file) as img:
-            leaves.append(Leaf(f"{uploaded_file.name}_{int(time.time_ns())}", uploaded_file.name, img.copy()))
+            leaves.append(
+                Leaf(
+                    f"{uploaded_file.name}_{int(time.time_ns())}",
+                    uploaded_file.name,
+                    img.copy(),
+                )
+            )
