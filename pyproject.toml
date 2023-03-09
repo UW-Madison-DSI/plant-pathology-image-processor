@@ -13,17 +13,14 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-
-[project.urls]
-"Homepage" = "https://github.com/AFIDSI/plant-pathology-image-processor"
-"Bug Tracker" = "https://github.com/AFIDSI/plant-pathology-image-processor/issues"
-
 dependencies = [
   "numpy==1.23.5",
   "streamlit==1.18.1",
   "pandas==1.5.2",
   "pillow==9.2.0",
-  "streamlit_lottie==0.0.3"
+  "streamlit_lottie==0.0.3",
+  "black==22.6.0",
+  "pytest==7.2.1"
 ]
 
 [project.optional-dependencies]
@@ -31,3 +28,7 @@ dev = [
   "black==22.6.0",
   "pytest==7.2.1"
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/AFIDSI/plant-pathology-image-processor"
+"Bug Tracker" = "https://github.com/AFIDSI/plant-pathology-image-processor/issues"
