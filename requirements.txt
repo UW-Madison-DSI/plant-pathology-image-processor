@@ -1,4 +1,0 @@
-pillow
-pandas
-numpy
-streamlit

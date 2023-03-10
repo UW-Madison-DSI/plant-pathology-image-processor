@@ -7,11 +7,26 @@ authors = [
 ]
 description = "A small example package"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+]
+dependencies = [
+  "numpy==1.23.5",
+  "streamlit==1.18.1",
+  "pandas==1.5.2",
+  "pillow==9.2.0",
+  "streamlit_lottie==0.0.3",
+  "black==22.6.0",
+  "pytest==7.2.1"
+]
+
+[project.optional-dependencies]
+dev = [
+  "black==22.6.0",
+  "pytest==7.2.1"
 ]
 
 [project.urls]
