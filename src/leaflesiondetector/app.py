@@ -1,7 +1,9 @@
 import streamlit as st
-import leaflesiondetector.ui_functions
+#import leaflesiondetector.ui_functions
+import ui_functions
 import time
-from leaflesiondetector.leaf import LeafList
+#from leaflesiondetector.leaf import LeafList
+from leaf import LeafList
 
 if "leaves" not in st.session_state:
     st.session_state["leaves"] = LeafList()
