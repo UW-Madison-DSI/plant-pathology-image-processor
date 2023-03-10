@@ -1,5 +1,5 @@
 import streamlit as st
-import leaflesiondetector.lesion_detector
+from leaflesiondetector import lesion_detector
 # import lesion_detector
 import os
 import shutil
