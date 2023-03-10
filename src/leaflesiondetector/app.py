@@ -1,5 +1,5 @@
 import streamlit as st
-import leaflesiondetector.ui_functions
+from leaflesiondetector import ui_functions
 # import ui_functions
 import time
 from leaflesiondetector.leaf import LeafList
