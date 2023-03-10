@@ -1,13 +1,13 @@
 import streamlit as st
-# import leaflesiondetector.lesion_detector
-import lesion_detector
+import leaflesiondetector.lesion_detector
+# import lesion_detector
 import os
 import shutil
 from PIL import Image
 import time
 from pathlib import Path
-# from leaflesiondetector.leaf import Leaf
-from leaf import Leaf
+from leaflesiondetector.leaf import Leaf
+# from leaf import Leaf
 import tempfile
 import time
 from streamlit_lottie import st_lottie_spinner
