@@ -4,7 +4,7 @@
     "output_folder_path": "./results",
     "black_velvet": {
         "leaf_area": {
-            "min_hue": 50,
+            "min_hue": 40,
             "max_hue": 100,
             "min_saturation": 0,
             "max_saturation": 255,
@@ -16,7 +16,7 @@
             "max_hue": 100,
             "min_saturation": 0,
             "max_saturation": 255,
-            "min_value": 140,
+            "min_value": 120,
             "max_value": 255
         }
     },

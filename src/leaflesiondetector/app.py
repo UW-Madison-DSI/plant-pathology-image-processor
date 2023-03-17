@@ -14,6 +14,7 @@ if "process" not in st.session_state:
 st.set_page_config(
     page_title="Leaf Lesion Detector", page_icon=":leaves:", layout="wide"
 )
+
 st.title(":leaves: Leaf Lesion Detector")
 st.write(
     "This app will process images of plant leaves and calculate the percentage of leaf area affected by disease."

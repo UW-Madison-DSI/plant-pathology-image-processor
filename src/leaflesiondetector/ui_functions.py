@@ -102,16 +102,17 @@ def display_results(leaves: list) -> None:
         cols[3].markdown(
             f"#### {leaf.name}\n ### {'%.2f'%leaf.lesion_area_percentage} %\n ### {'%.2f'%leaf.run_time} s"
         )
-        cols[3].number_input(
-            "Adjust detection intensity range",
-            min_value=0,
-            max_value=255,
-            value=leaf.minimum_lesion_area_value,
-            step=5,
-            key=leaf.key,
-            on_change=update_result,
-            args=[leaf],
-        )
+        with cols[3].expander("Settings"):
+            st.number_input(
+                "Adjust detection intensity",
+                min_value=0,
+                max_value=255,
+                value=leaf.minimum_lesion_area_value,
+                step=5,
+                key=leaf.key,
+                on_change=update_result,
+                args=[leaf],
+            )
 
 
 def update_result(leaf) -> None:
