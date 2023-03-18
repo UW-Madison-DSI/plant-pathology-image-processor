@@ -37,7 +37,7 @@ def append_leaf_area_binary(leaf: Leaf) -> None:
     new_img = Image.fromarray(np.uint8(min_hues * max_hues * saturation * values * 255))
 
     # Remove noise
-    new_img = new_img.filter(ImageFilter.MedianFilter(9))
+    new_img = new_img.filter(ImageFilter.MedianFilter(25))
 
     # Save leaf size to dataframe
     leaf.leaf_area = np.sum(min_hues * max_hues * saturation * values)

@@ -80,8 +80,8 @@ def process_uploaded_images(leaves: list) -> None:
         loop=True,
     ):
         for i, leaf in enumerate(leaves):
-            lesion_detector.process_image(leaf)
             my_bar.progress((i + 1) / len(leaves), f"{leaf.name}...")
+            lesion_detector.process_image(leaf)
         end_time = time.time()
     st.markdown(f"#### Total run time: {'%.2f'%(end_time - start_time)} seconds")
     my_bar.empty()
@@ -113,6 +113,7 @@ def display_results(leaves: list) -> None:
                 on_change=update_result,
                 args=[leaf],
             )
+            st.warning("To maintain consistency across a set of calculations using the same threshold for all images is recommended.")
 
 
 def update_result(leaf) -> None:

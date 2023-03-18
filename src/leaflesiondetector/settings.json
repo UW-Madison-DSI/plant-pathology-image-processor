@@ -4,16 +4,16 @@
     "output_folder_path": "./results",
     "black_velvet": {
         "leaf_area": {
-            "min_hue": 40,
-            "max_hue": 100,
+            "min_hue": 35,
+            "max_hue": 120,
             "min_saturation": 0,
             "max_saturation": 255,
-            "min_value": 60,
+            "min_value": 55,
             "max_value": 255
         },
         "lesion_area": {
-            "min_hue": 45,
-            "max_hue": 100,
+            "min_hue": 35,
+            "max_hue": 120,
             "min_saturation": 0,
             "max_saturation": 255,
             "min_value": 120,
