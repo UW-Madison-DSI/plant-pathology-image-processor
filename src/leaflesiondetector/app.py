@@ -11,6 +11,9 @@ if "leaves" not in st.session_state:
 if "process" not in st.session_state:
     st.session_state["process"] = False
 
+if "render" not in st.session_state:
+    st.session_state["render"] = False
+
 st.set_page_config(
     page_title="Leaf Lesion Detector", page_icon=":leaves:", layout="wide"
 )
@@ -41,5 +44,9 @@ with st.form("my-form", clear_on_submit=True):
 
 if st.session_state["process"]:
     ui_functions.process_uploaded_images(st.session_state["leaves"].leaves)
+    # ui_functions.download_results(st.session_state["leaves"].leaves)
+    # ui_functions.display_results(st.session_state["leaves"].leaves)
+
+if st.session_state["render"]:
     ui_functions.download_results(st.session_state["leaves"].leaves)
     ui_functions.display_results(st.session_state["leaves"].leaves)

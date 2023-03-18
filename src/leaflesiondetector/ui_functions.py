@@ -25,7 +25,7 @@ def maintain_results() -> None:
     """
     This function maintains the results.
     """
-    st.session_state["process"] = True
+    st.session_state["render"] = True
 
 
 def download_results(leaves: list) -> None:
@@ -86,7 +86,8 @@ def process_uploaded_images(leaves: list) -> None:
     st.markdown(f"#### Total run time: {'%.2f'%(end_time - start_time)} seconds")
     my_bar.empty()
 
-    st.session_state["process"] = True
+    st.session_state["process"] = False
+    st.session_state["render"] = True
 
 
 def display_results(leaves: list) -> None:

@@ -12,11 +12,11 @@
             "max_value": 255
         },
         "lesion_area": {
-            "min_hue": 35,
-            "max_hue": 120,
+            "min_hue": 45,
+            "max_hue": 100,
             "min_saturation": 0,
             "max_saturation": 255,
-            "min_value": 120,
+            "min_value": 130,
             "max_value": 255
         }
     },
