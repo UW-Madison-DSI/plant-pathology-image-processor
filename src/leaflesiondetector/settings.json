@@ -2,6 +2,10 @@
     "background_colour": "black_velvet",
     "input_folder_path": "./input_images",
     "output_folder_path": "./results",
+    "median_blur_size": {
+        "leaf": 25,
+        "lesion": 5
+    },
     "black_velvet": {
         "leaf_area": {
             "min_hue": 35,

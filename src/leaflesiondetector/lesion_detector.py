@@ -37,7 +37,7 @@ def append_leaf_area_binary(leaf: Leaf) -> None:
     new_img = Image.fromarray(np.uint8(min_hues * max_hues * saturation * values * 255))
 
     # Remove noise
-    new_img = new_img.filter(ImageFilter.MedianFilter(25))
+    new_img = new_img.filter(ImageFilter.MedianFilter(settings["median_blur_size"]["leaf"]))
 
     # Save leaf size to dataframe
     leaf.leaf_area = np.sum(min_hues * max_hues * saturation * values)
@@ -70,7 +70,7 @@ def append_lesion_area_binary(leaf: Leaf) -> None:
     new_img = Image.fromarray(np.uint8(min_hues * max_hues * saturation * values * 255))
 
     # Remove noise
-    new_img = new_img.filter(ImageFilter.MedianFilter(5))
+    new_img = new_img.filter(ImageFilter.MedianFilter(settings["median_blur_size"]["lesion"]))
 
     # Save lesion size and percentage
     leaf.lesion_area = leaf.leaf_area - np.sum(

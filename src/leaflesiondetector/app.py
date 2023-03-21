@@ -44,8 +44,6 @@ with st.form("my-form", clear_on_submit=True):
 
 if st.session_state["process"]:
     ui_functions.process_uploaded_images(st.session_state["leaves"].leaves)
-    # ui_functions.download_results(st.session_state["leaves"].leaves)
-    # ui_functions.display_results(st.session_state["leaves"].leaves)
 
 if st.session_state["render"]:
     ui_functions.download_results(st.session_state["leaves"].leaves)
