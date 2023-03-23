@@ -12,6 +12,7 @@ import tempfile
 import time
 from streamlit_lottie import st_lottie_spinner
 import requests
+from leaflesiondetector import clustering
 
 
 def load_lottieurl(url: str):
@@ -71,8 +72,6 @@ def process_uploaded_images(leaves: list) -> None:
     """
     my_bar = st.progress(0, "Running...")
     start_time = time.time()
-    # https://assets4.lottiefiles.com/packages/lf20_vcxeqptb.json
-    # https://assets4.lottiefiles.com/packages/lf20_XIIxSb.json
     with st_lottie_spinner(
         load_lottieurl("https://assets4.lottiefiles.com/packages/lf20_XIIxSb.json"),
         key="download",
@@ -80,8 +79,12 @@ def process_uploaded_images(leaves: list) -> None:
         loop=True,
     ):
         for i, leaf in enumerate(leaves):
+            leaf.minimum_lesion_area_value = 120
             my_bar.progress((i + 1) / len(leaves), f"{leaf.name}...")
             lesion_detector.process_image(leaf)
+            if leaf.lesion_area_percentage > 7:
+                leaf.minimum_lesion_area_value = 140
+                lesion_detector.process_image(leaf)
         end_time = time.time()
     st.markdown(f"#### Total run time: {'%.2f'%(end_time - start_time)} seconds")
     my_bar.empty()
@@ -101,7 +104,7 @@ def display_results(leaves: list) -> None:
         cols[1].image(leaf.leaf_binary)
         cols[2].image(leaf.lesion_binary)
         cols[3].markdown(
-            f"#### {leaf.name}\n ### {'%.2f'%leaf.lesion_area_percentage} %\n ### {'%.2f'%leaf.run_time} s"
+            f"#### {leaf.name}\n ### {'%.2f'%leaf.lesion_area_percentage} %\n ### {'%.2f'%leaf.run_time} s \n ### Cluster: {leaf.cluster}"
         )
         with cols[3].expander("Settings"):
             st.number_input(

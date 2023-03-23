@@ -23,6 +23,9 @@ class Leaf:
         "lesion_area"
     ]["min_value"]
 
+    def __lt__(self, other):
+        return self.lesion_area_percentage < other.lesion_area_percentage
+
 
 @dataclass
 class LeafList:
