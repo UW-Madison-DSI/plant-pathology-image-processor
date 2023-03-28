@@ -29,7 +29,7 @@ def maintain_results() -> None:
     st.session_state["render"] = True
 
 
-def download_results(leaves: list) -> None:
+def download_results(leaves: list, reference: bool) -> None:
     """
     This function downloads the results of the image processing.
     """
@@ -66,7 +66,7 @@ def download_results(leaves: list) -> None:
         )
 
 
-def process_uploaded_images(leaves: list) -> None:
+def process_uploaded_images(leaves: list, reference: bool) -> None:
     """
     This function processes the uploaded images.
     """
@@ -81,10 +81,10 @@ def process_uploaded_images(leaves: list) -> None:
         for i, leaf in enumerate(leaves):
             leaf.minimum_lesion_area_value = 120
             my_bar.progress((i + 1) / len(leaves), f"{leaf.name}...")
-            lesion_detector.process_image(leaf)
-            if leaf.lesion_area_percentage > 7:
+            lesion_detector.process_image(leaf, reference)
+            if leaf.lesion_area_percentage > 8.5:
                 leaf.minimum_lesion_area_value = 140
-                lesion_detector.process_image(leaf)
+                lesion_detector.process_image(leaf, reference)
         end_time = time.time()
     st.markdown(f"#### Total run time: {'%.2f'%(end_time - start_time)} seconds")
     my_bar.empty()
@@ -93,20 +93,30 @@ def process_uploaded_images(leaves: list) -> None:
     st.session_state["render"] = True
 
 
-def display_results(leaves: list) -> None:
+def display_results(leaves: list, reference: bool) -> None:
     """
     This function displays the results of the image processing.
     """
 
     for leaf in leaves:
-        cols = st.columns(4)
+        num_cols = 5 if reference else 4
+        cols = st.columns(num_cols)
         cols[0].image(leaf.img)
         cols[1].image(leaf.leaf_binary)
         cols[2].image(leaf.lesion_binary)
-        cols[3].markdown(
-            f"#### {leaf.name}\n ### {'%.2f'%leaf.lesion_area_percentage} %\n ### {'%.2f'%leaf.run_time} s \n ### Cluster: {leaf.cluster}"
+        if reference:
+            cols[3].image(leaf.reference_binary)
+            res_col = 4
+        else:
+            res_col = 3
+        cols[res_col].markdown(
+            f"""
+            #### {leaf.name}\n 
+            ### {'%.2f'%leaf.lesion_area_percentage} %\n 
+            ### {'%.2f'%leaf.lesion_area_cm2+"cm²" if reference else ""}\n
+            ### {'%.2f'%leaf.run_time} s"""
         )
-        with cols[3].expander("Settings"):
+        with cols[res_col].expander("Settings"):
             st.number_input(
                 "Adjust detection intensity",
                 min_value=0,
@@ -117,8 +127,6 @@ def display_results(leaves: list) -> None:
                 on_change=update_result,
                 args=[leaf],
             )
-            st.warning("To maintain consistency across a set of calculations using the same threshold for all images is recommended.")
-
 
 def update_result(leaf) -> None:
     leaf.minimum_lesion_area_value = st.session_state[leaf.key]

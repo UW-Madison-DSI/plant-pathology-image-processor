@@ -4,12 +4,45 @@ from PIL import ImageFilter
 import json
 import time
 from leaflesiondetector.leaf import Leaf
+import math
 # from leaf import Leaf
 
 # Read in settings from JSON file
 with open("src/leaflesiondetector/settings.json") as f:
     settings = json.load(f)
 
+def append_reference_area_binary(leaf: Leaf) -> None:
+    """
+    Takes a leaf object as input and saves a binary image with the reference area highlighted in white, to the object.
+    """
+
+    # Convert to HSV
+    hsv_img = leaf.img.convert("HSV")
+    hsv = np.array(hsv_img)
+
+    # Create a mask of reference object regions
+    min_hues = (
+        hsv[:, :, 0] > settings[settings["background_colour"]]["reference_area"]["min_hue"]
+    )
+    max_hues = (
+        hsv[:, :, 0] < settings[settings["background_colour"]]["reference_area"]["max_hue"]
+    )
+    saturation = (
+        hsv[:, :, 1]
+        < settings[settings["background_colour"]]["reference_area"]["max_saturation"]
+    )
+    values = (
+        hsv[:, :, 2] > settings[settings["background_colour"]]["reference_area"]["min_value"]
+    )
+    new_img = Image.fromarray(np.uint8(min_hues * max_hues * saturation * values * 255))
+
+    # Remove noise
+    new_img = new_img.filter(ImageFilter.MedianFilter(settings["median_blur_size"]["reference"]))
+
+    # Save leaf size to dataframe
+    leaf.reference = settings["reference_radius"]/math.sqrt(np.sum(min_hues * max_hues * saturation * values)/math.pi)
+
+    leaf.reference_binary = new_img.convert("RGB").copy()
 
 def append_leaf_area_binary(leaf: Leaf) -> None:
     """
@@ -37,7 +70,7 @@ def append_leaf_area_binary(leaf: Leaf) -> None:
     new_img = Image.fromarray(np.uint8(min_hues * max_hues * saturation * values * 255))
 
     # Remove noise
-    new_img = new_img.filter(ImageFilter.MedianFilter(settings["median_blur_size"]["leaf"]))
+    new_img = new_img.filter(ImageFilter.MedianFilter(settings["median_blur_size"]["lesion"]))
 
     # Save leaf size to dataframe
     leaf.leaf_area = np.sum(min_hues * max_hues * saturation * values)
@@ -77,16 +110,18 @@ def append_lesion_area_binary(leaf: Leaf) -> None:
         min_hues * max_hues * saturation * values
     )
     leaf.lesion_area_percentage = 100 * leaf.lesion_area / leaf.leaf_area
-
+    leaf.lesion_area_cm2 = leaf.lesion_area * leaf.reference**2
     leaf.lesion_binary = new_img.convert("RGB").copy()
 
 
-def process_image(leaf: Leaf) -> None:
+def process_image(leaf: Leaf, reference: bool) -> None:
     """
     Takes a leaf object as input and calls the functions required to process the object.
     """
 
     start_time = time.time()
+    if reference:
+        append_reference_area_binary(leaf)
     append_leaf_area_binary(leaf)
     append_lesion_area_binary(leaf)
     leaf.run_time = time.time() - start_time

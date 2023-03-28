@@ -40,7 +40,7 @@ def cluster(x, n, leaflist: LeafList):
   for leaf, cluster in zip(leaflist, kmeans.labels_):
       leaf.cluster = cluster
 
-def run(leaflist: LeafList):
+def run(leaflist: LeafList, n: int):
     '''runs the clustering algorithm'''
     # load the model
     print("Loading model...")
@@ -60,4 +60,4 @@ def run(leaflist: LeafList):
     x = pca.transform(features)
     # cluster the features
     print("Clustering features...")
-    cluster(x, 2, leaflist)
+    cluster(x, n, leaflist)

@@ -24,10 +24,11 @@ st.write(
 )
 
 upload_status = st.empty()
-with st.form("my-form", clear_on_submit=True):
+with st.form("my-form", clear_on_submit=False):
     uploaded_files = st.file_uploader(
         "Upload images", type=["jpg", "jpeg", "png"], accept_multiple_files=True
     )
+    reference = st.checkbox("Use reference")
     submitted = st.form_submit_button("Process Images")
     if (len(uploaded_files) > 0) and submitted:
         st.session_state["leaves"] = LeafList()
@@ -43,8 +44,8 @@ with st.form("my-form", clear_on_submit=True):
         upload_status.empty()
 
 if st.session_state["process"]:
-    ui_functions.process_uploaded_images(st.session_state["leaves"].leaves)
+    ui_functions.process_uploaded_images(st.session_state["leaves"].leaves, reference)
 
 if st.session_state["render"]:
-    ui_functions.download_results(st.session_state["leaves"].leaves)
-    ui_functions.display_results(st.session_state["leaves"].leaves)
+    ui_functions.download_results(st.session_state["leaves"].leaves, reference)
+    ui_functions.display_results(st.session_state["leaves"].leaves, reference)

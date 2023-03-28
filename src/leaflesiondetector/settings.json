@@ -2,9 +2,11 @@
     "background_colour": "black_velvet",
     "input_folder_path": "./input_images",
     "output_folder_path": "./results",
+    "reference_radius": 0.8955,
     "median_blur_size": {
         "leaf": 25,
-        "lesion": 5
+        "lesion": 5,
+        "reference": 25
     },
     "black_velvet": {
         "leaf_area": {
@@ -21,6 +23,14 @@
             "min_saturation": 0,
             "max_saturation": 255,
             "min_value": 130,
+            "max_value": 255
+        },
+        "reference_area": {
+            "min_hue": 0,
+            "max_hue": 255,
+            "min_saturation": 0,
+            "max_saturation": 55,
+            "min_value": 140,
             "max_value": 255
         }
     },
