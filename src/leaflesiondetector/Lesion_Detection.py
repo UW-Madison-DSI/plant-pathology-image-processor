@@ -1,8 +1,10 @@
 import streamlit as st
 from leaflesiondetector import ui_functions
+
 # import ui_functions
 import time
 from leaflesiondetector.leaf import LeafList
+
 # from leaf import LeafList
 
 if "leaves" not in st.session_state:
@@ -34,7 +36,7 @@ with st.form("my-form", clear_on_submit=False):
         st.session_state["leaves"] = LeafList()
         st.session_state["maintain"] = False
         ui_functions.save_uploaded_files(
-            uploaded_files, st.session_state["leaves"].leaves
+            uploaded_files, st.session_state["leaves"].leaves, reference
         )
         st.session_state["process"] = True
     elif (len(uploaded_files) == 0) and submitted:
@@ -44,8 +46,8 @@ with st.form("my-form", clear_on_submit=False):
         upload_status.empty()
 
 if st.session_state["process"]:
-    ui_functions.process_uploaded_images(st.session_state["leaves"].leaves, reference)
+    ui_functions.process_uploaded_images(st.session_state["leaves"].leaves)
 
 if st.session_state["render"]:
-    ui_functions.download_results(st.session_state["leaves"].leaves, reference)
-    ui_functions.display_results(st.session_state["leaves"].leaves, reference)
+    ui_functions.download_results(st.session_state["leaves"].leaves)
+    ui_functions.display_results(st.session_state["leaves"].leaves)

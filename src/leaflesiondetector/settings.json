@@ -1,24 +1,26 @@
 {
-    "background_colour": "black_velvet",
+    "background_colour": "Black",
     "input_folder_path": "./input_images",
     "output_folder_path": "./results",
     "reference_radius": 0.8955,
     "median_blur_size": {
-        "leaf": 25,
+        "leaf": 7,
         "lesion": 5,
         "reference": 25
     },
-    "black_velvet": {
+    "Black": {
+        "low_intensity": 120,
+        "high_intensity": 140,
         "leaf_area": {
             "min_hue": 35,
-            "max_hue": 120,
+            "max_hue": 100,
             "min_saturation": 0,
             "max_saturation": 255,
-            "min_value": 55,
+            "min_value": 60,
             "max_value": 255
         },
         "lesion_area": {
-            "min_hue": 45,
+            "min_hue": 35,
             "max_hue": 100,
             "min_saturation": 0,
             "max_saturation": 255,
@@ -26,29 +28,39 @@
             "max_value": 255
         },
         "reference_area": {
-            "min_hue": 0,
+            "min_hue": 150,
             "max_hue": 255,
-            "min_saturation": 0,
-            "max_saturation": 55,
-            "min_value": 140,
+            "min_saturation": 90,
+            "max_saturation": 255,
+            "min_value": 90,
             "max_value": 255
         }
     },
-    "grey_background": {
+    "White": {
+        "low_intensity": 110,
+        "high_intensity": 130,
         "leaf_area": {
-            "min_hue": 20,
+            "min_hue": 35,
             "max_hue": 100,
-            "min_saturation": 20,
+            "min_saturation": 25,
             "max_saturation": 255,
-            "min_value": 60,
+            "min_value": 0,
             "max_value": 255
         },
         "lesion_area": {
-            "min_hue": 20,
+            "min_hue": 35,
             "max_hue": 100,
-            "min_saturation": 20,
+            "min_saturation": 25,
             "max_saturation": 255,
-            "min_value": 120,
+            "min_value": 130,
+            "max_value": 255
+        },
+        "reference_area": {
+            "min_hue": 150,
+            "max_hue": 255,
+            "min_saturation": 25,
+            "max_saturation": 255,
+            "min_value": 90,
             "max_value": 255
         }
     }
