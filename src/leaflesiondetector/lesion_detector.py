@@ -33,7 +33,7 @@ def append_reference_area_binary(leaf: Leaf) -> None:
     hsv_img = leaf.img.convert("HSV")
     hsv = np.array(hsv_img)
 
-    # Create a mask of non green regions
+    # Create a mask of pink regions
     hues = hsv[:, :, 0] > settings[leaf.background_colour]["reference_area"]["min_hue"]
     saturation = (
         hsv[:, :, 1]
@@ -42,6 +42,13 @@ def append_reference_area_binary(leaf: Leaf) -> None:
     values = (
         hsv[:, :, 2] > settings[leaf.background_colour]["reference_area"]["min_value"]
     )
+
+    if np.sum(hues * saturation * values) > (hsv.shape[0] * hsv.shape[1] * 0.01):
+        leaf.reference = True
+    else:
+        leaf.reference = False
+        return
+
     new_img = Image.fromarray(np.uint8(hues * saturation * values * 255))
 
     # Remove noise
@@ -128,8 +135,7 @@ def process_image(leaf: Leaf) -> None:
     """
 
     start_time = time.time()
-    if leaf.reference:
-        append_reference_area_binary(leaf)
+    append_reference_area_binary(leaf)
     append_leaf_area_binary(leaf)
     append_lesion_area_binary(leaf)
     leaf.run_time = time.time() - start_time

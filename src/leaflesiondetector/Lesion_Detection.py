@@ -26,17 +26,16 @@ st.write(
 )
 
 upload_status = st.empty()
-with st.form("my-form", clear_on_submit=False):
+with st.form("my-form", clear_on_submit=True):
     uploaded_files = st.file_uploader(
         "Upload images", type=["jpg", "jpeg", "png"], accept_multiple_files=True
     )
-    reference = st.checkbox("Use reference")
     submitted = st.form_submit_button("Process Images")
     if (len(uploaded_files) > 0) and submitted:
         st.session_state["leaves"] = LeafList()
         st.session_state["maintain"] = False
         ui_functions.save_uploaded_files(
-            uploaded_files, st.session_state["leaves"].leaves, reference
+            uploaded_files, st.session_state["leaves"].leaves
         )
         st.session_state["process"] = True
     elif (len(uploaded_files) == 0) and submitted:

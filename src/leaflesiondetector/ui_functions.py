@@ -80,7 +80,7 @@ def process_uploaded_images(leaves: list) -> None:
     start_time = time.time()
     with st_lottie_spinner(
         load_lottieurl("https://assets4.lottiefiles.com/packages/lf20_XIIxSb.json"),
-        key="download",
+        key="leaf_loader",
         speed=0.5,
         loop=True,
     ):
@@ -108,7 +108,6 @@ def display_results(leaves: list) -> None:
     """
     This function displays the results of the image processing.
     """
-
     for leaf in leaves:
         num_cols = 5 if leaf.reference else 4
         cols = st.columns(num_cols)
@@ -124,8 +123,8 @@ def display_results(leaves: list) -> None:
             f"""
             #### {leaf.name}\n 
             ### {'%.2f'%leaf.lesion_area_percentage} %\n 
-            ### {'%.2f'%leaf.lesion_area_cm2+"cm²" if leaf.reference else ""}\n
-            ### {'%.2f'%leaf.run_time} s"""
+            ### {'%.2f'%leaf.run_time} seconds \n
+            ### {'%.2f'%leaf.lesion_area_cm2+"cm²" if leaf.reference else ""}"""
         )
         with cols[res_col].expander("Settings"):
             st.number_input(
@@ -160,7 +159,7 @@ def update_result(leaf) -> None:
         lesion_detector.process_image(leaf)
 
 
-def save_uploaded_files(uploaded_files: list, leaves: list, reference: bool) -> None:
+def save_uploaded_files(uploaded_files: list, leaves: list) -> None:
     """
     This function saves the uploaded files to disk.
     """
@@ -183,6 +182,5 @@ def save_uploaded_files(uploaded_files: list, leaves: list, reference: bool) -> 
                     f"{uploaded_file.name}_{int(time.time_ns())}",
                     uploaded_file.name,
                     img.copy(),
-                    reference,
                 )
             )
