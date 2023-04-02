@@ -50,13 +50,11 @@ def append_reference_area_binary(leaf: Leaf) -> None:
     )
 
     # Save reference
-    leaf.reference = settings["reference_radius"] / math.sqrt(
+    leaf.reference_measure = settings["reference_radius"] / math.sqrt(
         np.sum(hues * saturation * values) / math.pi
     )
 
     leaf.reference_binary = new_img.convert("RGB").copy()
-
-    return hues * saturation * values
 
 
 def append_leaf_area_binary(leaf: Leaf) -> None:
@@ -120,7 +118,7 @@ def append_lesion_area_binary(leaf: Leaf) -> None:
     )
 
     leaf.lesion_area_percentage = 100 * leaf.lesion_area / leaf.leaf_area
-    leaf.lesion_area_cm2 = leaf.lesion_area * leaf.reference**2
+    leaf.lesion_area_cm2 = leaf.lesion_area * leaf.reference_measure**2
     leaf.lesion_binary = new_img.convert("RGB").copy()
 
 
