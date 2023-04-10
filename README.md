@@ -25,4 +25,8 @@ pip3 install -r requirements.txt
 streamlit run src/leaflesiondetector/app.py
 ```
 
+5. Requirement errors
+
+If encountered `cannot import name 'TypeGuard' from 'typing_extensions'` in a conda environment, use `conda install -c pyviz hvplot`
+
 ![Demo](./demo.png)

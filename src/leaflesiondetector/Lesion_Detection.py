@@ -1,8 +1,10 @@
 import streamlit as st
 from leaflesiondetector import ui_functions
+
 # import ui_functions
 import time
 from leaflesiondetector.leaf import LeafList
+
 # from leaf import LeafList
 
 if "leaves" not in st.session_state:
@@ -11,9 +13,13 @@ if "leaves" not in st.session_state:
 if "process" not in st.session_state:
     st.session_state["process"] = False
 
+if "render" not in st.session_state:
+    st.session_state["render"] = False
+
 st.set_page_config(
     page_title="Leaf Lesion Detector", page_icon=":leaves:", layout="wide"
 )
+
 st.title(":leaves: Leaf Lesion Detector")
 st.write(
     "This app will process images of plant leaves and calculate the percentage of leaf area affected by disease."
@@ -40,5 +46,10 @@ with st.form("my-form", clear_on_submit=True):
 
 if st.session_state["process"]:
     ui_functions.process_uploaded_images(st.session_state["leaves"].leaves)
+
+if st.session_state["render"]:
+    message = st.empty()
+    message.info("Loading images...")
     ui_functions.download_results(st.session_state["leaves"].leaves)
     ui_functions.display_results(st.session_state["leaves"].leaves)
+    message.empty()

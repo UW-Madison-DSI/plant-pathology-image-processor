@@ -5,6 +5,7 @@
 *.zip
 binaries.zip
 !tests/fixtures/*
+Makefile
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
