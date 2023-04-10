@@ -18,7 +18,7 @@ class Leaf:
     leaf_area: int = 0
     lesion_area: int = 0
     lesion_area_percentage: float = 0
-    lesion_area_cm2: float = 0
+    lesion_area_mm2: float = 0
     run_time: float = 0
     minimum_lesion_area_value: int = 0
 

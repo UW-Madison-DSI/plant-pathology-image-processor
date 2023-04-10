@@ -125,7 +125,7 @@ def append_lesion_area_binary(leaf: Leaf) -> None:
     )
 
     leaf.lesion_area_percentage = 100 * leaf.lesion_area / leaf.leaf_area
-    leaf.lesion_area_cm2 = leaf.lesion_area * leaf.reference_measure**2
+    leaf.lesion_area_mm2 = leaf.lesion_area * leaf.reference_measure**2
     leaf.lesion_binary = new_img.convert("RGB").copy()
 
 

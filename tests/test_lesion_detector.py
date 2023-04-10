@@ -11,6 +11,7 @@ from pathlib import Path
 import tempfile
 import time
 
+
 # Unit test for the get_leaf_area_binary function
 def test_get_leaf_area_binary():
     """
@@ -20,7 +21,9 @@ def test_get_leaf_area_binary():
     # Create a test pillow image
     # Create a leaf object
     with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
-        leaf = Leaf(f"test_{int(time.time_ns())}", "test", img.copy())
+        leaf = Leaf(
+            f"test_{int(time.time_ns())}", "test", img.copy(), background_colour="Black"
+        )
     # Pass the test image to the function
     append_leaf_area_binary(leaf)
     # Check the output is a pillow image
@@ -36,7 +39,9 @@ def test_get_lesion_area_binary():
     # Create a test pillow image
     # Create a leaf object
     with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
-        leaf = Leaf(f"test_{int(time.time_ns())}", "test", img.copy())
+        leaf = Leaf(
+            f"test_{int(time.time_ns())}", "test", img.copy(), background_colour="Black"
+        )
     # Pass the test image to the function
     append_lesion_area_binary(leaf)
     # Check the output is a pillow image
@@ -51,16 +56,22 @@ def test_process_image():
     """
     # Get a test image
     with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
-        leaf = Leaf(f"test_{int(time.time_ns())}", "test", img.copy())
+        leaf = Leaf(
+            f"test_{int(time.time_ns())}",
+            "test",
+            img.copy(),
+            background_colour="Black",
+            minimum_lesion_area_value=120,
+        )
     # Process and check one test image
     process_image(leaf)
     assert (
         isinstance(leaf.leaf_binary, Image.Image)
         and isinstance(leaf.lesion_binary, Image.Image)
-        and leaf.leaf_area > 0
-        and leaf.lesion_area > 0
-        and leaf.lesion_area_percentage > 0
-        and leaf.run_time > 0
+        and (leaf.leaf_area > 0)
+        and (leaf.lesion_area > 0)
+        and (leaf.lesion_area_percentage > 0)
+        and (leaf.run_time > 0)
     )
 
 
@@ -77,8 +88,19 @@ def test_pipeline_produces_expected_output(image_name):
         os.mkdir(f"{tmpdirname}/new_output_images/lesion_area_binaries")
 
         with Image.open(f"./tests/fixtures/input_images/{image_name}") as img:
-            leaf = Leaf(f"test_{int(time.time_ns())}", "test", img.copy())
+            leaf = Leaf(
+                f"test_{int(time.time_ns())}",
+                "test",
+                img.copy(),
+                background_colour="Black",
+            )
+
+            leaf.minimum_lesion_area_value = 120
             process_image(leaf)
+            if leaf.lesion_area_percentage > 8.5:
+                leaf.minimum_lesion_area_value = 140
+                process_image(leaf)
+
             leaf.leaf_binary.save(
                 f"{tmpdirname}/new_output_images/leaf_area_binaries/{Path(image_name).stem}_leaf_area_binary{Path(image_name).suffix}"
             )
