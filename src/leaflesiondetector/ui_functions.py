@@ -150,13 +150,7 @@ def display_results(leaves: list) -> None:
 def update_result(leaf) -> None:
     leaf.minimum_lesion_area_value = st.session_state[leaf.key + "_intensity"]
     leaf.background_colour = st.session_state[leaf.key + "_colour"]
-    leaf.minimum_lesion_area_value = settings[leaf.background_colour]["low_intensity"]
     lesion_detector.process_image(leaf)
-    if leaf.lesion_area_percentage > 8.5:
-        leaf.minimum_lesion_area_value = settings[leaf.background_colour][
-            "high_intensity"
-        ]
-        lesion_detector.process_image(leaf)
 
 
 def save_uploaded_files(uploaded_files: list, leaves: list) -> None:

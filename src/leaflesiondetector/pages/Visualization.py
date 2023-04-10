@@ -3,26 +3,45 @@ from streamlit_echarts import st_echarts
 
 st.title(":chart_with_upwards_trend: Visualize the data")
 
+st.markdown(
+    """
+#### For the below to work, please upload files with the following naming convention:
+`<disease_name>_<leaf_number>.<file_extension>`
+"""
+)
+st.write("")
+
+if len(st.session_state["leaves"].leaves) == 0 or "leaves" not in st.session_state:
+    st.warning("Please upload an image set first")
+    st.stop()
+
 diseases = {}
 boxplot_data = [[]]
 
 for leaf in st.session_state["leaves"].leaves:
-    diseases[f"{leaf.name.split('_')[0]}"] = diseases.get(
-        f"{leaf.name.split('_')[0]}", {"count": 0, "measurements": []}
+    disease_name = leaf.name.split("_")[0]
+    leaf_number = leaf.name.split("_")[1]
+    # day = leaf.name.split('_')[3]
+    diseases[f"{disease_name}"] = diseases.get(
+        f"{disease_name}", {"count": 0, "measurements": [], "leaves": {}}
     )
-    diseases[f"{leaf.name.split('_')[0]}"]["count"] += 1
-    diseases[f"{leaf.name.split('_')[0]}"]["measurements"].append(
-        leaf.lesion_area_percentage
-    )
+    diseases[f"{disease_name}"]["count"] += 1
+    diseases[f"{disease_name}"]["measurements"].append(leaf.lesion_area_percentage)
+    # diseases[f"{disease_name}"]["leaves"][disease_name + leaf_number] = diseases[f"{disease_name}"]["leaves"].get(disease_name + leaf_number, {"name": f"{disease_name+leaf_number}","type": "line","stack": "Total","data": [],})["data"].insert(int(day-1),leaf.lesion_area_percentage)
 
 pie_data = [{"value": v["count"], "name": k} for k, v in diseases.items()]
-boxplot_data = [v["measurements"] for v in diseases.values()]
 
 piechart = {
     "title": {
         "text": "Disease types",
         "subtext": "Shows all the types of diseases covered in image set",
         "left": "center",
+    },
+    "toolbox": {
+        "show": "true",
+        "feature": {
+            "saveAsImage": {"title": "Save"},
+        },
     },
     "tooltip": {"trigger": "item"},
     "legend": {
@@ -50,11 +69,19 @@ st_echarts(
     height="600px",
 )
 
-subtext = "\n".join(
+boxplot_data = [v["measurements"] for v in diseases.values()]
+
+subtext = ", ".join(
     ["Disease " + str(i) + ": " + k for i, k in enumerate(diseases.keys())]
 )
 
 boxplot = {
+    "toolbox": {
+        "show": "true",
+        "feature": {
+            "saveAsImage": {"title": "Save"},
+        },
+    },
     "title": [
         {
             "text": "Boxplot of lesion area calculations",

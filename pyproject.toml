@@ -32,3 +32,6 @@ dev = [
 [project.urls]
 "Homepage" = "https://github.com/AFIDSI/plant-pathology-image-processor"
 "Bug Tracker" = "https://github.com/AFIDSI/plant-pathology-image-processor/issues"
+
+[tool.pytest]
+testpaths = "tests"

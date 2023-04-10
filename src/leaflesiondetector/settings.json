@@ -16,7 +16,7 @@
             "max_hue": 100,
             "min_saturation": 0,
             "max_saturation": 255,
-            "min_value": 50,
+            "min_value": 60,
             "max_value": 255
         },
         "lesion_area": {
