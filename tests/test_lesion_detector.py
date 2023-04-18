@@ -18,15 +18,11 @@ def test_get_leaf_area_binary():
     Tests the get_leaf_area_binary function to ensure
     the function is not breaking.
     """
-    # Create a test pillow image
-    # Create a leaf object
     with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
         leaf = Leaf(
             f"test_{int(time.time_ns())}", "test", img.copy(), background_colour="Black"
         )
-    # Pass the test image to the function
     append_leaf_area_binary(leaf)
-    # Check the output is a pillow image
     assert isinstance(leaf.leaf_binary, Image.Image)
 
 
@@ -36,15 +32,11 @@ def test_get_lesion_area_binary():
     Tests the get_lesion_area_binary function to ensure
     the function is not breaking.
     """
-    # Create a test pillow image
-    # Create a leaf object
     with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
         leaf = Leaf(
             f"test_{int(time.time_ns())}", "test", img.copy(), background_colour="Black"
         )
-    # Pass the test image to the function
     append_lesion_area_binary(leaf)
-    # Check the output is a pillow image
     assert isinstance(leaf.lesion_binary, Image.Image)
 
 
@@ -54,7 +46,6 @@ def test_process_image():
     Tests the process_image function to ensure
     the function is not breaking.
     """
-    # Get a test image
     with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
         leaf = Leaf(
             f"test_{int(time.time_ns())}",
@@ -63,7 +54,6 @@ def test_process_image():
             background_colour="Black",
             minimum_lesion_area_value=120,
         )
-    # Process and check one test image
     process_image(leaf)
     assert (
         isinstance(leaf.leaf_binary, Image.Image)

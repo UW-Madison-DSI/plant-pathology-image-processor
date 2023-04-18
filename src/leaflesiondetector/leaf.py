@@ -10,7 +10,7 @@ class Leaf:
     name: str
     img: Image
     reference: bool = False
-    reference_measure: float = 0
+    reference_area: float = 0
     background_colour: str = ""
     leaf_binary: Image = None
     lesion_binary: Image = None

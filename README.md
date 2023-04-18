@@ -6,7 +6,7 @@ extract information from plant pathlogy images
 1. Create a virtual environment
 
 ```bash
-conda create -n plant-pathology-image-processor python=3.7
+conda create -n plant-pathology-image-processor python=3.9
 ```
 2. Activate the virtual environment
 

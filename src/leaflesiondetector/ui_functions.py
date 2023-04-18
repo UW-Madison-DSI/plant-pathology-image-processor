@@ -45,7 +45,7 @@ def download_results(leaves: list) -> None:
         os.mkdir(tmpdirname + "/lesion_area_binaries/")
         os.mkdir(tmpdirname + "/reference_binaries/")
         with open(f"{tmpdirname}/results.csv", "w") as f:
-            if leaves[0].reference:
+            if any([leaf.reference for leaf in leaves]):
                 f.write(
                     "Image,Percentage area,Percentage area mm2,Run time (seconds),Intensity threshold\n"
                 )
@@ -56,28 +56,29 @@ def download_results(leaves: list) -> None:
             for leaf in leaves:
                 if leaf.reference:
                     f.write(
-                        f"{leaf.name},{leaf.lesion_area_percentage},{leaf.lesion_area_mm2},{leaf.run_time},{leaf.minimum_lesion_area_value},{leaf.reference_area_percentage},{leaf.reference_area_mm2}\n"
+                        f"{leaf.name},{leaf.lesion_area_percentage},{leaf.lesion_area_mm2},{leaf.run_time},{leaf.minimum_lesion_area_value}\n"
                     )
                 else:
                     f.write(
-                        f"{leaf.name},{leaf.lesion_area_percentage},{leaf.run_time},{leaf.minimum_lesion_area_value}\n"
+                        f"{leaf.name},{leaf.lesion_area_percentage},NA,{leaf.run_time},{leaf.minimum_lesion_area_value}\n"
                     )
-                leaf.leaf_binary.save(
+        for leaf in leaves:
+            leaf.leaf_binary.save(
+                tmpdirname
+                + "/leaf_area_binaries/"
+                + f"{Path(leaf.name).stem}_leaf_area_binary{Path(leaf.name).suffix}"
+            )
+            leaf.lesion_binary.save(
+                tmpdirname
+                + "/lesion_area_binaries/"
+                + f"{Path(leaf.name).stem}_lesion_area_binary{Path(leaf.name).suffix}"
+            )
+            if leaf.reference:
+                leaf.reference_binary.save(
                     tmpdirname
-                    + "/leaf_area_binaries/"
-                    + f"{Path(leaf.name).stem}_leaf_area_binary{Path(leaf.name).suffix}"
+                    + "/reference_binaries/"
+                    + f"{Path(leaf.name).stem}_reference_binary{Path(leaf.name).suffix}"
                 )
-                leaf.lesion_binary.save(
-                    tmpdirname
-                    + "/lesion_area_binaries/"
-                    + f"{Path(leaf.name).stem}_lesion_area_binary{Path(leaf.name).suffix}"
-                )
-                if leaf.reference:
-                    leaf.reference_binary.save(
-                        tmpdirname
-                        + "/reference_binaries/"
-                        + f"{Path(leaf.name).stem}_reference_binary{Path(leaf.name).suffix}"
-                    )
         shutil.make_archive("results", "zip", tmpdirname)
 
     # Add a download button
@@ -143,7 +144,7 @@ def display_results(leaves: list) -> None:
             #### {leaf.name}\n 
             ### {'%.2f'%leaf.lesion_area_percentage} %\n 
             ### {'%.2f'%leaf.run_time} seconds \n
-            ### {'%.2f'%leaf.lesion_area_cm2+"mm²" if leaf.reference else ""}"""
+            ### {'%.2f'%leaf.lesion_area_mm2+"mm²" if leaf.reference else ""}"""
         )
         with cols[res_col].expander("Settings"):
             st.number_input(

@@ -2,7 +2,7 @@
     "background_colour": "Black",
     "input_folder_path": "./input_images",
     "output_folder_path": "./results",
-    "reference_radius": 8.955,
+    "reference_area_mm": 251.930676616,
     "median_blur_size": {
         "leaf": 13,
         "lesion": 5,
