@@ -15,6 +15,7 @@ import time
 from streamlit_lottie import st_lottie_spinner
 import requests
 import json
+import csv
 
 # Read in settings from JSON file
 with open("src/leaflesiondetector/settings.json") as f:
@@ -35,6 +36,34 @@ def maintain_results() -> None:
     st.session_state["render"] = True
 
 
+def write_csv(file: str, leaves: list) -> None:
+    """
+    This function writes the results of the image processing to a CSV file.
+    """
+    with open(file, "w") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "Image",
+                "Percentage area",
+                "Percentage area mm2",
+                "Run time (seconds)",
+                "Intensity threshold",
+            ],
+        )
+        writer.writeheader()
+        for leaf in leaves:
+            writer.writerow(
+                {
+                    "Image": leaf.name,
+                    "Percentage area": leaf.lesion_area_percentage,
+                    "Percentage area mm2": leaf.lesion_area_mm2,
+                    "Run time (seconds)": leaf.run_time,
+                    "Intensity threshold": leaf.minimum_lesion_area_value,
+                }
+            )
+
+
 def download_results(leaves: list) -> None:
     """
     This function downloads the results of the image processing.
@@ -44,24 +73,7 @@ def download_results(leaves: list) -> None:
         os.mkdir(tmpdirname + "/leaf_area_binaries/")
         os.mkdir(tmpdirname + "/lesion_area_binaries/")
         os.mkdir(tmpdirname + "/reference_binaries/")
-        with open(f"{tmpdirname}/results.csv", "w") as f:
-            if any([leaf.reference for leaf in leaves]):
-                f.write(
-                    "Image,Percentage area,Percentage area mm2,Run time (seconds),Intensity threshold\n"
-                )
-            else:
-                f.write(
-                    "Image,Percentage area,Run time (seconds),Intensity threshold\n"
-                )
-            for leaf in leaves:
-                if leaf.reference:
-                    f.write(
-                        f"{leaf.name},{leaf.lesion_area_percentage},{leaf.lesion_area_mm2},{leaf.run_time},{leaf.minimum_lesion_area_value}\n"
-                    )
-                else:
-                    f.write(
-                        f"{leaf.name},{leaf.lesion_area_percentage},NA,{leaf.run_time},{leaf.minimum_lesion_area_value}\n"
-                    )
+        write_csv(f"{tmpdirname}/results.csv", leaves)
         for leaf in leaves:
             leaf.leaf_binary.save(
                 tmpdirname

@@ -122,10 +122,19 @@ def append_lesion_area_binary(leaf: Leaf) -> None:
         min_hues * max_hues * saturation * values
     )
 
-    leaf.lesion_area_percentage = 100 * leaf.lesion_area / leaf.leaf_area
-    leaf.lesion_area_mm2 = (
-        leaf.lesion_area * settings["reference_area_mm"]
-    ) / leaf.reference_area
+    if leaf.leaf_area == 0:
+        leaf.lesion_area_percentage = 0
+        leaf.lesion_area_mm2 = 0
+    else:
+        leaf.lesion_area_percentage = 100 * leaf.lesion_area / leaf.leaf_area
+
+    if leaf.reference_area == 0:
+        leaf.lesion_area_mm2 = None
+    else:
+        leaf.lesion_area_mm2 = (
+            leaf.lesion_area * settings["reference_area_mm"]
+        ) / leaf.reference_area
+
     leaf.lesion_binary = new_img.convert("RGB").copy()
 
 

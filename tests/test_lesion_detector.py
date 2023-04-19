@@ -12,48 +12,47 @@ import tempfile
 import time
 
 
-# Unit test for the get_leaf_area_binary function
-def test_get_leaf_area_binary():
-    """
-    Tests the get_leaf_area_binary function to ensure
-    the function is not breaking.
-    """
+@pytest.fixture()
+def base_leaf():
     with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
-        leaf = Leaf(
-            f"test_{int(time.time_ns())}", "test", img.copy(), background_colour="Black"
-        )
-    append_leaf_area_binary(leaf)
-    assert isinstance(leaf.leaf_binary, Image.Image)
-
-
-# Unit test for get_lesion_area_binary function
-def test_get_lesion_area_binary():
-    """
-    Tests the get_lesion_area_binary function to ensure
-    the function is not breaking.
-    """
-    with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
-        leaf = Leaf(
-            f"test_{int(time.time_ns())}", "test", img.copy(), background_colour="Black"
-        )
-    append_lesion_area_binary(leaf)
-    assert isinstance(leaf.lesion_binary, Image.Image)
-
-
-# Unit test for process_image function
-def test_process_image():
-    """
-    Tests the process_image function to ensure
-    the function is not breaking.
-    """
-    with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
-        leaf = Leaf(
+        return Leaf(
             f"test_{int(time.time_ns())}",
             "test",
             img.copy(),
             background_colour="Black",
             minimum_lesion_area_value=120,
         )
+
+
+# Unit test for the get_leaf_area_binary function
+def test_get_leaf_area_binary(base_leaf):
+    """
+    Tests the get_leaf_area_binary function to ensure
+    the function is not breaking.
+    """
+    leaf = base_leaf
+    append_leaf_area_binary(leaf)
+    assert isinstance(leaf.leaf_binary, Image.Image)
+
+
+# Unit test for get_lesion_area_binary function
+def test_get_lesion_area_binary(base_leaf):
+    """
+    Tests the get_lesion_area_binary function to ensure
+    the function is not breaking.
+    """
+    leaf = base_leaf
+    append_lesion_area_binary(leaf)
+    assert isinstance(leaf.lesion_binary, Image.Image)
+
+
+# Unit test for process_image function
+def test_process_image(base_leaf):
+    """
+    Tests the process_image function to ensure
+    the function is not breaking.
+    """
+    leaf = base_leaf
     process_image(leaf)
     assert (
         isinstance(leaf.leaf_binary, Image.Image)
