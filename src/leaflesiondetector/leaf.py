@@ -21,6 +21,7 @@ class Leaf:
     lesion_area_mm2: float = 0
     run_time: float = 0
     minimum_lesion_area_value: int = 0
+    modified_image: Image = None
 
     def __lt__(self, other):
         return self.lesion_area_percentage < other.lesion_area_percentage
