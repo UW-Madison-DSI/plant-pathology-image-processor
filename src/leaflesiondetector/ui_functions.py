@@ -40,26 +40,22 @@ def write_csv(file: str, leaves: list) -> None:
     """
     This function writes the results of the image processing to a CSV file.
     """
+    columns_format = dict(
+        name="Image",
+        lesion_area_percentage="Percentage area",
+        lesion_area_mm2="Percentage area mm2",
+        run_time="Run time (seconds)",
+        minimum_lesion_area_value="Intensity threshold",
+    )
     with open(file, "w") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=[
-                "Image",
-                "Percentage area",
-                "Percentage area mm2",
-                "Run time (seconds)",
-                "Intensity threshold",
-            ],
-        )
+        writer = csv.DictWriter(f, fieldnames=[x for x in columns_format.values()])
         writer.writeheader()
         for leaf in leaves:
             writer.writerow(
                 {
-                    "Image": leaf.name,
-                    "Percentage area": leaf.lesion_area_percentage,
-                    "Percentage area mm2": leaf.lesion_area_mm2,
-                    "Run time (seconds)": leaf.run_time,
-                    "Intensity threshold": leaf.minimum_lesion_area_value,
+                    columns_format[k]: v
+                    for k, v in vars(leaf).items()
+                    if k in columns_format
                 }
             )
 
