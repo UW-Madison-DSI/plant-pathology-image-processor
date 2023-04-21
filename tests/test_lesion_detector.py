@@ -11,56 +11,53 @@ from pathlib import Path
 import tempfile
 import time
 
+
+@pytest.fixture()
+def base_leaf():
+    with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
+        return Leaf(
+            f"test_{int(time.time_ns())}",
+            "test",
+            img.copy(),
+            background_colour="Black",
+            minimum_lesion_area_value=120,
+        )
+
+
 # Unit test for the get_leaf_area_binary function
-def test_get_leaf_area_binary():
+def test_get_leaf_area_binary(base_leaf):
     """
     Tests the get_leaf_area_binary function to ensure
     the function is not breaking.
     """
-    # Create a test pillow image
-    # Create a leaf object
-    with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
-        leaf = Leaf(f"test_{int(time.time_ns())}", "test", img.copy())
-    # Pass the test image to the function
-    append_leaf_area_binary(leaf)
-    # Check the output is a pillow image
-    assert isinstance(leaf.leaf_binary, Image.Image)
+    append_leaf_area_binary(base_leaf)
+    assert isinstance(base_leaf.leaf_binary, Image.Image)
 
 
 # Unit test for get_lesion_area_binary function
-def test_get_lesion_area_binary():
+def test_get_lesion_area_binary(base_leaf):
     """
     Tests the get_lesion_area_binary function to ensure
     the function is not breaking.
     """
-    # Create a test pillow image
-    # Create a leaf object
-    with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
-        leaf = Leaf(f"test_{int(time.time_ns())}", "test", img.copy())
-    # Pass the test image to the function
-    append_lesion_area_binary(leaf)
-    # Check the output is a pillow image
-    assert isinstance(leaf.lesion_binary, Image.Image)
+    append_lesion_area_binary(base_leaf)
+    assert isinstance(base_leaf.lesion_binary, Image.Image)
 
 
 # Unit test for process_image function
-def test_process_image():
+def test_process_image(base_leaf):
     """
     Tests the process_image function to ensure
     the function is not breaking.
     """
-    # Get a test image
-    with Image.open("./tests/fixtures/input_images/Xg_01_post.jpeg") as img:
-        leaf = Leaf(f"test_{int(time.time_ns())}", "test", img.copy())
-    # Process and check one test image
-    process_image(leaf)
+    process_image(base_leaf)
     assert (
-        isinstance(leaf.leaf_binary, Image.Image)
-        and isinstance(leaf.lesion_binary, Image.Image)
-        and leaf.leaf_area > 0
-        and leaf.lesion_area > 0
-        and leaf.lesion_area_percentage > 0
-        and leaf.run_time > 0
+        isinstance(base_leaf.leaf_binary, Image.Image)
+        and isinstance(base_leaf.lesion_binary, Image.Image)
+        and (base_leaf.leaf_area > 0)
+        and (base_leaf.lesion_area > 0)
+        and (base_leaf.lesion_area_percentage > 0)
+        and (base_leaf.run_time > 0)
     )
 
 
@@ -77,8 +74,19 @@ def test_pipeline_produces_expected_output(image_name):
         os.mkdir(f"{tmpdirname}/new_output_images/lesion_area_binaries")
 
         with Image.open(f"./tests/fixtures/input_images/{image_name}") as img:
-            leaf = Leaf(f"test_{int(time.time_ns())}", "test", img.copy())
+            leaf = Leaf(
+                f"test_{int(time.time_ns())}",
+                "test",
+                img.copy(),
+                background_colour="Black",
+            )
+
+            leaf.minimum_lesion_area_value = 120
             process_image(leaf)
+            if leaf.lesion_area_percentage > 8.5:
+                leaf.minimum_lesion_area_value = 140
+                process_image(leaf)
+
             leaf.leaf_binary.save(
                 f"{tmpdirname}/new_output_images/leaf_area_binaries/{Path(image_name).stem}_leaf_area_binary{Path(image_name).suffix}"
             )

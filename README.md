@@ -6,7 +6,7 @@ extract information from plant pathlogy images
 1. Create a virtual environment
 
 ```bash
-conda create -n plant-pathology-image-processor python=3.7
+conda create -n plant-pathology-image-processor python=3.9
 ```
 2. Activate the virtual environment
 
@@ -24,5 +24,9 @@ pip3 install -r requirements.txt
 ```bash
 streamlit run src/leaflesiondetector/app.py
 ```
+
+5. Requirement errors
+
+If encountered `cannot import name 'TypeGuard' from 'typing_extensions'` in a conda environment, use `conda install -c pyviz hvplot`
 
 ![Demo](./demo.png)
