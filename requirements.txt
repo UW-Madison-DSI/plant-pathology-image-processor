@@ -7,4 +7,5 @@ black==22.6.0
 pytest==7.2.1
 charset-normalizer==3.1.0
 chardet==5.1.0
+streamlit_echarts==0.4.0
 -e .
