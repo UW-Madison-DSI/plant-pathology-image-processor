@@ -141,18 +141,23 @@ def display_results(leaves: list) -> None:
     This function displays the results of the image processing.
     """
     for leaf in leaves:
-        num_cols = 3
+        num_cols = 4
         cols = st.columns(num_cols)
         cols[0].image(leaf.img)
         cols[1].image(leaf.modified_image)
-        cols[2].markdown(
+        cols[2].image(leaf.leaf_binary)
+        cols[3].markdown(
             f"""
             #### {leaf.name}\n 
             ### {'%.2f'%leaf.lesion_area_percentage} %\n 
             ### {'%.2f'%leaf.run_time} seconds \n
-            ### {'%.2f'%leaf.lesion_area_mm2+"mm²" if leaf.reference else ""}"""
+            ### {'%.2f'%leaf.lesion_area_mm2+"mm²" if leaf.reference else ""}
+            #### {leaf.num_lesions} lesions
+            **Average lesion size:** {'%.2f'%leaf.average_lesion_size} {"mm²" if leaf.reference else "pixels"}
+            **Maximum lesion size:** {leaf.max_lesion_size} {"mm²" if leaf.reference else "pixels"}
+            **Minimum lesion size:** {leaf.min_lesion_size} {"mm²" if leaf.reference else "pixels"}"""
         )
-        with cols[2].expander("Settings"):
+        with cols[3].expander("Settings"):
             st.number_input(
                 "Adjust detection intensity",
                 min_value=0,

@@ -5,9 +5,7 @@ import json
 import time
 from leaflesiondetector.leaf import Leaf
 from skimage import measure
-import matplotlib.colors as mcolors
-
-# from leaf import Leaf
+from scipy import ndimage
 
 # Read in settings from JSON file
 with open("src/leaflesiondetector/settings.json") as f:
@@ -23,6 +21,80 @@ def background_detector(leaf: Leaf):
         leaf.background_colour = "Black"
     else:
         leaf.background_colour = "White"
+
+
+def value_to_color(value, vmin, vmax):
+    """Convert a value to an RGB color tuple based on its position between vmin and vmax."""
+    vrange = vmax - vmin
+    if vrange == 0:
+        return (0, 0, 0)
+    else:
+        # Normalize the value to the range [0, 1]
+        v = (value - vmin) / vrange
+        # Set the hue to 0.0 (pure red)
+        r = 1.0
+        # Set the saturation to 1.0 (fully saturated)
+        g = 1.0 - v
+        # Interpolate the brightness between 0.0 (black) and 1.0 (full red)
+        b = 0.0
+        return (int(255 * r), int(255 * g), int(255 * b))
+
+
+def segment_lesions(leaf: Leaf):
+    lesion_binary = np.asarray(leaf.lesion_binary)
+    lesion_binary = ~lesion_binary
+    labeled, nr_objects = ndimage.label(lesion_binary)
+
+    # Open the input class array as a NumPy array
+    class_array = labeled
+
+    # Get the unique class values and their corresponding counts
+    class_values, class_counts = np.unique(class_array, return_counts=True)
+
+    max_here = max(sorted(class_counts)[:-2])
+
+    class_color = {}
+    class_color[0] = 0
+    class_color[1] = 1
+    for i, class_value in enumerate(class_values):
+        if class_value in [0, 1]:
+            continue  # Skip the background and object classes
+        class_color[class_value] = value_to_color(
+            class_counts[i], class_counts.min(), max_here
+        )
+
+    # Create an output image with the mapped colors
+    leaf_pixels = leaf.leaf_binary.load()
+    for y in range(class_array.shape[0]):
+        for x in range(class_array.shape[1]):
+            if (labeled[y, x] in [0, 1]) or (leaf_pixels[x, y] == (0, 0, 0)):
+                continue
+            leaf.modified_image.putpixel((x, y), class_color[labeled[y, x]])
+            leaf.lesion_area += 1
+
+        leaf.average_lesion_size = (
+            (np.mean(sorted(class_counts)[:-2]) * settings["reference_area_mm"])
+            / leaf.reference_area
+            if leaf.reference
+            else np.mean(sorted(class_counts)[:-2])
+        )
+        leaf.min_lesion_size = (
+            (np.min(sorted(class_counts)[:-2]) * settings["reference_area_mm"])
+            / leaf.reference_area
+            if leaf.reference
+            else np.min(sorted(class_counts)[:-2])
+        )
+        leaf.max_lesion_size = (
+            (np.max(sorted(class_counts)[:-2]) * settings["reference_area_mm"])
+            / leaf.reference_area
+            if leaf.reference
+            else np.max(sorted(class_counts)[:-2])
+        )
+        leaf.num_lesions = len(sorted(class_counts)[:-2])
+
+
+#   # Save the output image
+#   return output_image
 
 
 def append_reference_area_binary(leaf: Leaf) -> None:
@@ -70,43 +142,27 @@ def append_reference_area_binary(leaf: Leaf) -> None:
                 pixels[i, j] = (0, 255, 0)  # change to pink
 
 
-# def append_leaf_area_binary(leaf: Leaf) -> None:
-#     """
-#     Takes a leaf object as input and saves a binary image with the leaf area highlighted in white, to the object.
-#     """
-
-#     # Convert to HSV
-#     hsv_img = leaf.img.convert("HSV")
-#     hsv = np.array(hsv_img)
-
-#     # Create a mask of green regions
-#     min_hues = hsv[:, :, 0] > settings[leaf.background_colour]["leaf_area"]["min_hue"]
-#     max_hues = hsv[:, :, 0] < settings[leaf.background_colour]["leaf_area"]["max_hue"]
-#     saturation = (
-#         hsv[:, :, 1] > settings[leaf.background_colour]["leaf_area"]["min_saturation"]
-#     )
-#     values = hsv[:, :, 2] > settings[leaf.background_colour]["leaf_area"]["min_value"]
-
-#     new_img = Image.fromarray(np.uint8(min_hues * max_hues * saturation * values * 255))
-
-#     # Remove noise
-#     new_img = new_img.filter(
-#         ImageFilter.MedianFilter(settings["median_blur_size"]["leaf"])
-#     )
-
-#     # Save leaf size to dataframe
-#     leaf.leaf_area = np.sum(min_hues * max_hues * saturation * values)
-
-#     leaf.leaf_binary = new_img.convert("RGB").copy()
-
-
 def append_leaf_area_binary(leaf: Leaf) -> None:
     """
     Takes a leaf object as input and saves a binary image with the leaf area highlighted in white, to the object.
     """
 
+    # Convert to HSV
+    hsv_img = leaf.img.convert("HSV")
+    hsv = np.array(hsv_img)
+
+    # Create a mask of green regions
+    min_hues = hsv[:, :, 0] > settings[leaf.background_colour]["leaf_area"]["min_hue"]
+    max_hues = hsv[:, :, 0] < settings[leaf.background_colour]["leaf_area"]["max_hue"]
+    saturation = (
+        hsv[:, :, 1] > settings[leaf.background_colour]["leaf_area"]["min_saturation"]
+    )
+    values = hsv[:, :, 2] > settings[leaf.background_colour]["leaf_area"]["min_value"]
+
+    new_img = Image.fromarray(np.uint8(min_hues * max_hues * saturation * values * 255))
+
     # Convert the image to grayscale
-    image_gray = leaf.img.convert("L")
+    image_gray = new_img.convert("L")
 
     enhancer = ImageEnhance.Contrast(image_gray)
     image_gray = enhancer.enhance(2)
@@ -118,8 +174,6 @@ def append_leaf_area_binary(leaf: Leaf) -> None:
         + measure.find_contours(np.array(image_gray), level=level)
         + measure.find_contours(np.array(image_gray), level=level + 10)
     )
-    # Create a colormap for contour colors
-    colors = list(mcolors.TABLEAU_COLORS.values())
 
     # Convert the image to RGB mode for drawing contours
     new_img = Image.new("RGB", (image_gray.size[0], image_gray.size[1]), color="black")
@@ -147,17 +201,8 @@ def append_leaf_area_binary(leaf: Leaf) -> None:
         new_img, (new_img.size[0] / 2, new_img.size[1] / 2), (255, 255, 255)
     )
 
-    pixels = new_img.load()
-    area = 0
-    for i in range(new_img.size[0]):
-        for j in range(new_img.size[1]):
-            if pixels[i, j] != (255, 255, 255):  # if not white:
-                pixels[i, j] = (0, 0, 0)  # change to black
-            else:
-                area += 1
-
     # Save leaf size to dataframe
-    leaf.leaf_area = area
+    leaf.leaf_area = np.sum(np.asarray(new_img.convert("1")))
     leaf.leaf_binary = new_img.convert("RGB").copy()
 
 
@@ -182,14 +227,46 @@ def append_lesion_area_binary(leaf: Leaf) -> None:
     new_img = Image.fromarray(np.uint8(min_hues * max_hues * saturation * values * 255))
 
     # Remove noise
-    new_img = new_img.filter(
+    leaf.lesion_binary = new_img.filter(
         ImageFilter.MedianFilter(settings["median_blur_size"]["lesion"])
     )
 
-    # Save lesion size and percentage
-    leaf.lesion_area = leaf.leaf_area - np.sum(
-        min_hues * max_hues * saturation * values
+    # Convert the image to grayscale
+    image_gray = leaf.leaf_binary.copy().convert("L")
+
+    enhancer = ImageEnhance.Contrast(image_gray)
+    image_gray = enhancer.enhance(2)
+
+    # Find contours in the grayscale image
+    contours = (
+        measure.find_contours(np.array(image_gray), level=40)
+        + measure.find_contours(np.array(image_gray), level=50)
+        + measure.find_contours(np.array(image_gray), level=60)
     )
+
+    # Convert the image to RGB mode for drawing contours
+    draw = ImageDraw.Draw(leaf.lesion_binary)
+
+    # Draw the contours on the image with different colors
+    for i, contour in enumerate(contours):
+        # Get the leftmost and rightmost x-coordinates of the shape
+        x_coords = [coord[0] for coord in contour]
+        leftmost_x = min(x_coords)
+        rightmost_x = max(x_coords)
+        # Calculate the width of the shape
+        width = rightmost_x - leftmost_x
+        if width >= image_gray.size[1] / 4:
+            contour_points = (
+                np.flip(contour, axis=1).flatten().tolist()
+            )  # Convert contour to list of points
+            draw.line(contour_points, fill="white", width=10)
+
+    segment_lesions(leaf)
+
+    # # Save lesion size and percentage
+    # leaf.lesion_area = leaf.leaf_area - np.sum(
+    #     min_hues * max_hues * saturation * values
+    # )
 
     if leaf.leaf_area == 0:
         leaf.lesion_area_percentage = 0
@@ -203,23 +280,6 @@ def append_lesion_area_binary(leaf: Leaf) -> None:
         leaf.lesion_area_mm2 = (
             leaf.lesion_area * settings["reference_area_mm"]
         ) / leaf.reference_area
-
-    leaf.lesion_binary = new_img.convert("RGB").copy()
-
-    pixels = leaf.modified_image.load()
-    leaf_mask = leaf.leaf_binary.load()
-    lesion_mask = leaf.lesion_binary.load()
-    area = 0
-    for i in range(leaf.img.size[0]):  # for every pixel:
-        for j in range(leaf.img.size[1]):
-            if leaf_mask[i, j] == (255, 255, 255) and lesion_mask[i, j] == (
-                0,
-                0,
-                0,
-            ):  # if white in leaf mask and black in lesion mask
-                pixels[i, j] = (255, 0, 0)  # change to red
-            else:
-                area += 1
 
 
 def process_image(leaf: Leaf) -> None:
