@@ -45,52 +45,60 @@ def segment_lesions(leaf: Leaf):
     lesion_binary = ~lesion_binary
     labeled, nr_objects = ndimage.label(lesion_binary)
 
-    # Open the input class array as a NumPy array
-    class_array = labeled
+    leaf.labeled_pixels = labeled
+    classes, sizes = np.unique(labeled, return_counts=True)
+    if leaf.reference:
+        leaf.lesion_class_map = {
+            k: v
+            for k, v in zip(
+                classes, sizes * settings["reference_area_mm"] / leaf.reference_area
+            )
+        }
+    else:
+        leaf.lesion_class_map = {k: v for k, v in zip(classes, sizes)}
+    class_sizes = list(leaf.lesion_class_map.values())
 
-    # Get the unique class values and their corresponding counts
-    class_values, class_counts = np.unique(class_array, return_counts=True)
-
-    max_here = max(sorted(class_counts)[:-2])
+    max_here = max(sorted(class_sizes)[:-2])
 
     class_color = {}
     class_color[0] = 0
     class_color[1] = 1
-    for i, class_value in enumerate(class_values):
+    for i, class_value in enumerate(leaf.lesion_class_map.keys()):
         if class_value in [0, 1]:
+            leaf.lesion_class_map[class_value] = 0
             continue  # Skip the background and object classes
         class_color[class_value] = value_to_color(
-            class_counts[i], class_counts.min(), max_here
+            class_sizes[i], min(class_sizes), max_here
         )
 
     # Create an output image with the mapped colors
     leaf_pixels = leaf.leaf_binary.load()
-    for y in range(class_array.shape[0]):
-        for x in range(class_array.shape[1]):
+    for y in range(leaf.labeled_pixels.shape[0]):
+        for x in range(leaf.labeled_pixels.shape[1]):
             if (labeled[y, x] in [0, 1]) or (leaf_pixels[x, y] == (0, 0, 0)):
                 continue
             leaf.modified_image.putpixel((x, y), class_color[labeled[y, x]])
             leaf.lesion_area += 1
 
         leaf.average_lesion_size = (
-            (np.mean(sorted(class_counts)[:-2]) * settings["reference_area_mm"])
+            (np.mean(sorted(class_sizes)[:-2]) * settings["reference_area_mm"])
             / leaf.reference_area
             if leaf.reference
-            else np.mean(sorted(class_counts)[:-2])
+            else np.mean(sorted(class_sizes)[:-2])
         )
         leaf.min_lesion_size = (
-            (np.min(sorted(class_counts)[:-2]) * settings["reference_area_mm"])
+            (np.min(sorted(class_sizes)[:-2]) * settings["reference_area_mm"])
             / leaf.reference_area
             if leaf.reference
-            else np.min(sorted(class_counts)[:-2])
+            else np.min(sorted(class_sizes)[:-2])
         )
         leaf.max_lesion_size = (
-            (np.max(sorted(class_counts)[:-2]) * settings["reference_area_mm"])
+            (np.max(sorted(class_sizes)[:-2]) * settings["reference_area_mm"])
             / leaf.reference_area
             if leaf.reference
-            else np.max(sorted(class_counts)[:-2])
+            else np.max(sorted(class_sizes)[:-2])
         )
-        leaf.num_lesions = len(sorted(class_counts)[:-2])
+        leaf.num_lesions = len(sorted(class_sizes)[:-2])
 
 
 #   # Save the output image

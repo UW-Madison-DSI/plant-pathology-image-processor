@@ -26,6 +26,8 @@ class Leaf:
     num_lesions: int = 0
     min_lesion_size: float = 0
     max_lesion_size: float = 0
+    labeled_pixels: list = field(default_factory=list)
+    lesion_class_map: dict = field(default_factory=dict)
 
     def __lt__(self, other):
         return self.lesion_area_percentage < other.lesion_area_percentage

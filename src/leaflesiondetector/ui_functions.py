@@ -16,6 +16,10 @@ from streamlit_lottie import st_lottie_spinner
 import requests
 import json
 import csv
+from streamlit_image_coordinates import streamlit_image_coordinates
+from PIL import ImageDraw
+import numpy as np
+import plotly.express as px
 
 # Read in settings from JSON file
 with open("src/leaflesiondetector/settings.json") as f:
@@ -27,6 +31,43 @@ def load_lottieurl(url: str):
     if r.status_code != 200:
         return None
     return r.json()
+
+
+def apply_changes(leaf: Leaf, point: tuple[int, int]) -> None:
+    """
+    This function applies the changes to the image.
+    """
+    # Image modification
+    draw = ImageDraw.Draw(leaf.modified_image)
+    class_value = leaf.labeled_pixels[point[1]][point[0]]
+    if class_value in [0, 1]:
+        return
+    x, y = np.where(leaf.labeled_pixels == class_value)
+    draw.point(list(zip(y, x)), fill=(0, 0, 0))
+
+    # Values modification
+    leaf.lesion_area -= leaf.lesion_class_map[class_value]
+    leaf.lesion_class_map[class_value] = 0
+    leaf.lesion_area_percentage = 100 * leaf.lesion_area / leaf.leaf_area
+    if leaf.reference:
+        leaf.lesion_area_mm2 = (
+            leaf.lesion_area * settings["reference_area_mm"]
+        ) / leaf.reference_area
+    leaf.num_lesions -= 1
+    leaf.average_lesion_size = leaf.lesion_area / leaf.num_lesions
+    leaf.max_lesion_size = max(sorted(leaf.lesion_class_map.values())[:-2])
+    leaf.min_lesion_size = min(sorted(leaf.lesion_class_map.values())[:-2])
+
+
+def get_ellipse_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
+    center = point
+    radius = 10
+    return (
+        center[0] - radius,
+        center[1] - radius,
+        center[0] + radius,
+        center[1] + radius,
+    )
 
 
 def maintain_results() -> None:
@@ -141,11 +182,24 @@ def display_results(leaves: list) -> None:
     This function displays the results of the image processing.
     """
     for leaf in leaves:
-        num_cols = 3
+        num_cols = 2
         cols = st.columns(num_cols)
-        cols[0].image(leaf.img)
-        cols[1].image(leaf.modified_image)
-        cols[2].markdown(
+        with cols[0]:
+            # Draw an ellipse at each coordinate in points
+            for point in st.session_state["points"]:
+                apply_changes(leaf, point)
+            value = streamlit_image_coordinates(
+                leaf.modified_image,
+                width=leaf.modified_image.size[0] / 4,
+                height=leaf.modified_image.size[1] / 4,
+            )
+            if value is not None:
+                point = value["x"] * 4, value["y"] * 4
+                if point not in st.session_state["points"]:
+                    st.session_state["points"].append(point)
+                    st.experimental_rerun()
+
+        cols[1].markdown(
             f"""
             #### {leaf.name}\n 
             ### {'%.2f'%leaf.lesion_area_percentage} %\n 
@@ -156,7 +210,23 @@ def display_results(leaves: list) -> None:
             **Minimum lesion size:** {'%.2f'%leaf.min_lesion_size} {"mm²" if leaf.reference else "pixels"}\n
             {'%.2f'%leaf.run_time} seconds"""
         )
-        with cols[2].expander("Settings"):
+
+        if leaf.reference:
+            cols[1].plotly_chart(
+                px.histogram(
+                    list(leaf.lesion_class_map.values()),
+                    log_y=True,
+                    labels={"0": "test"},
+                ),
+                use_container_width=True,
+            )
+        else:
+            cols[1].plotly_chart(
+                px.histogram(list(leaf.lesion_class_map.values()), log_y=True),
+                use_container_width=True,
+            )
+
+        with cols[1].expander("Settings"):
             st.number_input(
                 "Adjust detection intensity",
                 min_value=0,
