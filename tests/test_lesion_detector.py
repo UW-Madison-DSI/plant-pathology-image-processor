@@ -10,6 +10,7 @@ from PIL import Image, ImageChops
 from pathlib import Path
 import tempfile
 import time
+import leaflesiondetector
 
 
 @pytest.fixture()
