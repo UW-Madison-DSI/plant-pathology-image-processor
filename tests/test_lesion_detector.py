@@ -30,9 +30,8 @@ def test_get_leaf_area_binary(base_leaf):
     Tests the get_leaf_area_binary function to ensure
     the function is not breaking.
     """
-    leaf = base_leaf
-    append_leaf_area_binary(leaf)
-    assert isinstance(leaf.leaf_binary, Image.Image)
+    append_leaf_area_binary(base_leaf)
+    assert isinstance(base_leaf.leaf_binary, Image.Image)
 
 
 # Unit test for get_lesion_area_binary function
@@ -41,9 +40,8 @@ def test_get_lesion_area_binary(base_leaf):
     Tests the get_lesion_area_binary function to ensure
     the function is not breaking.
     """
-    leaf = base_leaf
-    append_lesion_area_binary(leaf)
-    assert isinstance(leaf.lesion_binary, Image.Image)
+    append_lesion_area_binary(base_leaf)
+    assert isinstance(base_leaf.lesion_binary, Image.Image)
 
 
 # Unit test for process_image function
@@ -52,15 +50,14 @@ def test_process_image(base_leaf):
     Tests the process_image function to ensure
     the function is not breaking.
     """
-    leaf = base_leaf
-    process_image(leaf)
+    process_image(base_leaf)
     assert (
-        isinstance(leaf.leaf_binary, Image.Image)
-        and isinstance(leaf.lesion_binary, Image.Image)
-        and (leaf.leaf_area > 0)
-        and (leaf.lesion_area > 0)
-        and (leaf.lesion_area_percentage > 0)
-        and (leaf.run_time > 0)
+        isinstance(base_leaf.leaf_binary, Image.Image)
+        and isinstance(base_leaf.lesion_binary, Image.Image)
+        and (base_leaf.leaf_area > 0)
+        and (base_leaf.lesion_area > 0)
+        and (base_leaf.lesion_area_percentage > 0)
+        and (base_leaf.run_time > 0)
     )
 
 

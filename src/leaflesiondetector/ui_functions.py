@@ -1,7 +1,6 @@
 import streamlit as st
 from leaflesiondetector import lesion_detector
 
-# import lesion_detector
 import os
 import shutil
 from PIL import Image
@@ -9,7 +8,6 @@ import time
 from pathlib import Path
 from leaflesiondetector.leaf import Leaf
 
-# from leaf import Leaf
 import tempfile
 import time
 from streamlit_lottie import st_lottie_spinner
@@ -70,6 +68,13 @@ def write_csv(file: str, leaves: list) -> None:
     """
     This function writes the results of the image processing to a CSV file.
     """
+    columns_format = dict(
+        name="Image",
+        lesion_area_percentage="Percentage area",
+        lesion_area_mm2="Percentage area mm2",
+        run_time="Run time (seconds)",
+        minimum_lesion_area_value="Intensity threshold",
+    )
     with open(file, "w") as f:
         writer = csv.DictWriter(
             f,
