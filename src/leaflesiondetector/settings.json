@@ -5,7 +5,7 @@
     "reference_area_mm": 251.930676616,
     "median_blur_size": {
         "leaf": 13,
-        "lesion": 5,
+        "lesion": 1,
         "reference": 25
     },
     "Black": {
@@ -17,7 +17,8 @@
             "min_saturation": 0,
             "max_saturation": 255,
             "min_value": 60,
-            "max_value": 255
+            "max_value": 255,
+            "level": 50
         },
         "lesion_area": {
             "min_hue": 35,
@@ -25,7 +26,8 @@
             "min_saturation": 0,
             "max_saturation": 255,
             "min_value": 130,
-            "max_value": 255
+            "max_value": 255,
+            "level": 50
         },
         "reference_area": {
             "min_hue": 150,
@@ -45,7 +47,8 @@
             "min_saturation": 25,
             "max_saturation": 255,
             "min_value": 0,
-            "max_value": 255
+            "max_value": 255,
+            "level": 170
         },
         "lesion_area": {
             "min_hue": 35,
@@ -53,7 +56,8 @@
             "min_saturation": 25,
             "max_saturation": 255,
             "min_value": 130,
-            "max_value": 255
+            "max_value": 255,
+            "level": 50
         },
         "reference_area": {
             "min_hue": 150,

@@ -1,7 +1,6 @@
 import streamlit as st
 from leaflesiondetector import lesion_detector
 
-# import lesion_detector
 import os
 import shutil
 from PIL import Image
@@ -9,13 +8,16 @@ import time
 from pathlib import Path
 from leaflesiondetector.leaf import Leaf
 
-# from leaf import Leaf
 import tempfile
 import time
 from streamlit_lottie import st_lottie_spinner
 import requests
 import json
 import csv
+from streamlit_image_coordinates import streamlit_image_coordinates
+from PIL import ImageDraw
+import numpy as np
+import plotly.express as px
 
 # Read in settings from JSON file
 with open("src/leaflesiondetector/settings.json") as f:
@@ -27,6 +29,32 @@ def load_lottieurl(url: str):
     if r.status_code != 200:
         return None
     return r.json()
+
+
+def apply_changes(leaf: Leaf, point: tuple[int, int]) -> None:
+    """
+    This function applies the changes to the image.
+    """
+    # Image modification
+    draw = ImageDraw.Draw(leaf.modified_image)
+    class_value = leaf.labeled_pixels[point[1]][point[0]]
+    if class_value in [0, 1]:
+        return
+    x, y = np.where(leaf.labeled_pixels == class_value)
+    draw.point(list(zip(y, x)), fill=(0, 0, 0))
+
+    # Values modification
+    leaf.lesion_area -= leaf.lesion_class_map[class_value]
+    leaf.lesion_class_map.pop(class_value)
+    leaf.lesion_area_percentage = 100 * leaf.lesion_area / leaf.leaf_area
+    if leaf.reference:
+        leaf.lesion_area_mm2 = (
+            leaf.lesion_area * settings["reference_area_mm"]
+        ) / leaf.reference_area
+    leaf.num_lesions -= 1
+    leaf.average_lesion_size = leaf.lesion_area / leaf.num_lesions
+    leaf.max_lesion_size = max(leaf.lesion_class_map.values())
+    leaf.min_lesion_size = min(leaf.lesion_class_map.values())
 
 
 def maintain_results() -> None:
@@ -48,14 +76,37 @@ def write_csv(file: str, leaves: list) -> None:
         minimum_lesion_area_value="Intensity threshold",
     )
     with open(file, "w") as f:
-        writer = csv.DictWriter(f, fieldnames=[x for x in columns_format.values()])
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "Image",
+                "Percentage area",
+                "Area",
+                "Run time (seconds)",
+                "Intensity threshold",
+                "Lesion size threshold",
+                "Average lesion size",
+                "Maximum lesion size",
+                "Minimum lesion size",
+                "Lesion map",
+            ],
+        )
         writer.writeheader()
         for leaf in leaves:
             writer.writerow(
                 {
-                    columns_format[k]: v
-                    for k, v in vars(leaf).items()
-                    if k in columns_format
+                    "Image": leaf.name,
+                    "Percentage area": leaf.lesion_area_percentage,
+                    "Area": str(leaf.lesion_area) + " mm2"
+                    if leaf.reference
+                    else str(leaf.lesion_area) + " px",
+                    "Run time (seconds)": leaf.run_time,
+                    "Intensity threshold": leaf.minimum_lesion_area_value,
+                    "Lesion size threshold": leaf.lesion_size_threshold,
+                    "Average lesion size": leaf.average_lesion_size,
+                    "Maximum lesion size": leaf.max_lesion_size,
+                    "Minimum lesion size": leaf.min_lesion_size,
+                    "Lesion map": list(leaf.lesion_class_map.values()),
                 }
             )
 
@@ -66,27 +117,14 @@ def download_results(leaves: list) -> None:
     """
     # Create a temporary directory to store the results
     with tempfile.TemporaryDirectory() as tmpdirname:
-        os.mkdir(tmpdirname + "/leaf_area_binaries/")
-        os.mkdir(tmpdirname + "/lesion_area_binaries/")
-        os.mkdir(tmpdirname + "/reference_binaries/")
+        os.mkdir(tmpdirname + "/modified_images/")
         write_csv(f"{tmpdirname}/results.csv", leaves)
         for leaf in leaves:
-            leaf.leaf_binary.save(
+            leaf.modified_image.save(
                 tmpdirname
-                + "/leaf_area_binaries/"
-                + f"{Path(leaf.name).stem}_leaf_area_binary{Path(leaf.name).suffix}"
+                + "/modified_images/"
+                + f"{Path(leaf.name).stem}_modified{Path(leaf.name).suffix}"
             )
-            leaf.lesion_binary.save(
-                tmpdirname
-                + "/lesion_area_binaries/"
-                + f"{Path(leaf.name).stem}_lesion_area_binary{Path(leaf.name).suffix}"
-            )
-            if leaf.reference:
-                leaf.reference_binary.save(
-                    tmpdirname
-                    + "/reference_binaries/"
-                    + f"{Path(leaf.name).stem}_reference_binary{Path(leaf.name).suffix}"
-                )
         shutil.make_archive("results", "zip", tmpdirname)
 
     # Add a download button
@@ -119,7 +157,7 @@ def process_uploaded_images(leaves: list) -> None:
             ]
             my_bar.progress((i + 1) / len(leaves), f"{leaf.name}...")
             lesion_detector.process_image(leaf)
-            if leaf.lesion_area_percentage > 8.5:
+            if leaf.lesion_area_percentage > 3.5:
                 leaf.minimum_lesion_area_value = settings[leaf.background_colour][
                     "high_intensity"
                 ]
@@ -137,24 +175,50 @@ def display_results(leaves: list) -> None:
     This function displays the results of the image processing.
     """
     for leaf in leaves:
-        num_cols = 5 if leaf.reference else 4
-        cols = st.columns(num_cols)
-        cols[0].image(leaf.img)
-        cols[1].image(leaf.leaf_binary)
-        cols[2].image(leaf.lesion_binary)
-        if leaf.reference:
-            cols[3].image(leaf.reference_binary)
-            res_col = 4
-        else:
-            res_col = 3
-        cols[res_col].markdown(
+        cols = st.columns([1, 1.5, 1])
+        cols[0].image(
+            leaf.img,
+            use_column_width=True,
+        )
+        with cols[1]:
+            value = streamlit_image_coordinates(
+                leaf.modified_image,
+                width=leaf.modified_image.size[0] / 4,
+                height=leaf.modified_image.size[1] / 4,
+                key=leaf.key + "_image",
+            )
+            if value is not None:
+                point = (
+                    st.session_state[leaf.key + "_image"]["x"] * 4,
+                    st.session_state[leaf.key + "_image"]["y"] * 4,
+                )
+                if (point, leaf.key) not in st.session_state["points"]:
+                    st.session_state["points"].append((point, leaf.key))
+                    apply_changes(leaf, point)
+                    st.experimental_rerun()
+
+        cols[2].markdown(
             f"""
             #### {leaf.name}\n 
             ### {'%.2f'%leaf.lesion_area_percentage} %\n 
-            ### {'%.2f'%leaf.run_time} seconds \n
-            ### {'%.2f'%leaf.lesion_area_mm2+"mm²" if leaf.reference else ""}"""
+            ### {'%.2f'%leaf.lesion_area+" mm²" if leaf.reference else ""}
+            #### {leaf.num_lesions} lesions
+            **Average lesion size:** {'%.5f'%leaf.average_lesion_size} {"mm²" if leaf.reference else "pixels"}\n
+            **Maximum lesion size:** {'%.5f'%leaf.max_lesion_size} {"mm²" if leaf.reference else "pixels"}\n
+            **Minimum lesion size:** {'%.5f'%leaf.min_lesion_size} {"mm²" if leaf.reference else "pixels"}\n
+            {'%.2f'%leaf.run_time} seconds"""
         )
-        with cols[res_col].expander("Settings"):
+
+        with cols[2].expander("Settings"):
+            st.number_input(
+                "Adjust lesion size threshold",
+                value=leaf.lesion_size_threshold,
+                min_value=0.01,
+                step=1.0,
+                key=leaf.key + "_lesion_size",
+                on_change=update_result,
+                args=[leaf],
+            )
             st.number_input(
                 "Adjust detection intensity",
                 min_value=0,
@@ -174,10 +238,16 @@ def display_results(leaves: list) -> None:
                 args=[leaf],
             )
 
+        cols[2].plotly_chart(
+            px.histogram(list(leaf.lesion_class_map.values()), log_y=True),
+            use_container_width=True,
+        )
+
 
 def update_result(leaf) -> None:
     leaf.minimum_lesion_area_value = st.session_state[leaf.key + "_intensity"]
     leaf.background_colour = st.session_state[leaf.key + "_colour"]
+    leaf.lesion_size_threshold = st.session_state[leaf.key + "_lesion_size"]
     lesion_detector.process_image(leaf)
 
 

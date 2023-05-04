@@ -21,6 +21,7 @@ def base_leaf():
             img.copy(),
             background_colour="Black",
             minimum_lesion_area_value=120,
+            modified_image=img.copy(),
         )
 
 
@@ -40,6 +41,7 @@ def test_get_lesion_area_binary(base_leaf):
     Tests the get_lesion_area_binary function to ensure
     the function is not breaking.
     """
+    append_leaf_area_binary(base_leaf)
     append_lesion_area_binary(base_leaf)
     assert isinstance(base_leaf.lesion_binary, Image.Image)
 
@@ -83,7 +85,7 @@ def test_pipeline_produces_expected_output(image_name):
 
             leaf.minimum_lesion_area_value = 120
             process_image(leaf)
-            if leaf.lesion_area_percentage > 8.5:
+            if leaf.lesion_area_percentage > 3.5:
                 leaf.minimum_lesion_area_value = 140
                 process_image(leaf)
 

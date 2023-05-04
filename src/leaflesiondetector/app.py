@@ -16,6 +16,9 @@ if "process" not in st.session_state:
 if "render" not in st.session_state:
     st.session_state["render"] = False
 
+if "points" not in st.session_state:
+    st.session_state["points"] = []
+
 st.set_page_config(
     page_title="Leaf Lesion Detector", page_icon=":leaves:", layout="wide"
 )
