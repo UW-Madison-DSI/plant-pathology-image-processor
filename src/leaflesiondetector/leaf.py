@@ -1,4 +1,3 @@
-import json
 from typing import List
 from PIL import Image
 from dataclasses import dataclass, field
@@ -28,6 +27,7 @@ class Leaf:
     max_lesion_size: float = 0
     labeled_pixels: list = field(default_factory=list)
     lesion_class_map: dict = field(default_factory=dict)
+    lesion_size_threshold: float = 0.01
 
     def __lt__(self, other):
         return self.lesion_area_percentage < other.lesion_area_percentage
