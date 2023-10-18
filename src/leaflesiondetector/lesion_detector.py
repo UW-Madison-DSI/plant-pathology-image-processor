@@ -189,8 +189,10 @@ def append_leaf_area_binary(leaf: Leaf) -> None:
             contour_points = (
                 np.flip(contour, axis=1).flatten().tolist()
             )  # Convert contour to list of points
-            draw_on_white.line(contour_points, fill="blue", width=2)
+            draw_on_white.line(contour_points, fill="white", width=2)  #blue, 2
             draw_on_img.line(contour_points, fill="blue", width=5)
+
+    leaf.leaf_outline_binary = new_img.copy().convert("RGB")
 
     # Floodfill the image to remove any noise within the boundary
     ImageDraw.floodfill(

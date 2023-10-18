@@ -125,6 +125,21 @@ def download_results(leaves: list) -> None:
                 + "/modified_images/"
                 + f"{Path(leaf.name).stem}_modified{Path(leaf.name).suffix}"
             )
+            leaf.leaf_binary.save(
+                tmpdirname
+                + "/modified_images/"
+                + f"{Path(leaf.name).stem}_leaf_binary{Path(leaf.name).suffix}"
+            )
+            leaf.leaf_outline_binary.save(
+                tmpdirname
+                + "/modified_images/"
+                + f"{Path(leaf.name).stem}_leaf_outline_binary{Path(leaf.name).suffix}"
+            )
+            leaf.lesion_binary.save(
+                tmpdirname
+                + "/modified_images/"
+                + f"{Path(leaf.name).stem}_lesion_binary{Path(leaf.name).suffix}"
+            )
         shutil.make_archive("results", "zip", tmpdirname)
 
     # Add a download button

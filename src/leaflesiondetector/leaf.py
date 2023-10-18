@@ -12,6 +12,7 @@ class Leaf:
     reference_area: float = 0
     background_colour: str = ""
     leaf_binary: Image = None
+    leaf_outline_binary: Image = None
     lesion_binary: Image = None
     reference_binary: Image = None
     leaf_area: int = 0
