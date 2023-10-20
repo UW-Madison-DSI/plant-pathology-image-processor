@@ -1,3 +1,6 @@
+import io
+from pathlib import Path
+
 import streamlit as st
 from leaflesiondetector import ui_functions
 
@@ -29,6 +32,29 @@ st.write(
 )
 
 upload_status = st.empty()
+
+
+def run_demo():
+    demo_files = Path("demo_images").glob("*.jpg")
+    uploaded_files = []
+    for file in demo_files:
+        uploaded_files.append(open(file, 'rb'))
+
+    if (len(uploaded_files) > 0) and submitted:
+        st.session_state["leaves"] = LeafList()
+        st.session_state["maintain"] = False
+        ui_functions.save_uploaded_files(
+            uploaded_files, st.session_state["leaves"].leaves
+        )
+        st.session_state["process"] = True
+
+
+with st.form("demo-button-form", clear_on_submit=True):
+    submitted = st.form_submit_button("Run app with demonstration images!")
+    if submitted:
+        run_demo()
+
+
 with st.form("my-form", clear_on_submit=True):
     uploaded_files = st.file_uploader(
         "Upload images", type=["jpg", "jpeg", "png"], accept_multiple_files=True
@@ -46,6 +72,9 @@ with st.form("my-form", clear_on_submit=True):
         upload_status.error("Please upload at least one image.")
         time.sleep(2)
         upload_status.empty()
+
+
+
 
 if st.session_state["process"]:
     ui_functions.process_uploaded_images(st.session_state["leaves"].leaves)

@@ -66,59 +66,62 @@ def test_process_image(base_leaf):
 
 # Integration test
 @pytest.mark.parametrize("image_name", os.listdir("./tests/fixtures/input_images/"))
-def test_pipeline_produces_expected_output(image_name):
+def test_pipeline_produces_expected_output(image_name, tmp_path):
     """
     This function tests the consistency of the image output to determine whether
     the changes made to the code affect the base functionality of the image processor.
     """
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        os.mkdir(f"{tmpdirname}/new_output_images")
-        os.mkdir(f"{tmpdirname}/new_output_images/leaf_area_binaries")
-        os.mkdir(f"{tmpdirname}/new_output_images/lesion_area_binaries")
 
-        with Image.open(f"./tests/fixtures/input_images/{image_name}") as img:
-            leaf = Leaf(
-                f"test_{int(time.time_ns())}",
-                "test",
-                img.copy(),
-                background_colour="Black",
-            )
+    new_output_images_path = (tmp_path / "new_output_images")
+    new_output_images_path.mkdir()
+    leaf_area_binaries_path = (tmp_path / "new_output_images" / "leaf_area_binaries")
+    leaf_area_binaries_path.mkdir()
+    lesion_area_binaries_path = (tmp_path / "new_output_images" / "lesion_area_binaries")
+    lesion_area_binaries_path.mkdir()
 
-            leaf.minimum_lesion_area_value = 120
+    with Image.open(f"./tests/fixtures/input_images/{image_name}") as img:
+        leaf = Leaf(
+            f"test_{int(time.time_ns())}",
+            "test",
+            img.copy(),
+            background_colour="Black",
+        )
+
+        leaf.minimum_lesion_area_value = 120
+        process_image(leaf)
+        if leaf.lesion_area_percentage > 3.5:
+            leaf.minimum_lesion_area_value = 140
             process_image(leaf)
-            if leaf.lesion_area_percentage > 3.5:
-                leaf.minimum_lesion_area_value = 140
-                process_image(leaf)
 
-            leaf.leaf_binary.save(
-                f"{tmpdirname}/new_output_images/leaf_area_binaries/{Path(image_name).stem}_leaf_area_binary{Path(image_name).suffix}"
-            )
-            leaf.lesion_binary.save(
-                f"{tmpdirname}/new_output_images/lesion_area_binaries/{Path(image_name).stem}_lesion_area_binary{Path(image_name).suffix}"
-            )
+        leaf.leaf_binary.save(
+            leaf_area_binaries_path / f"{Path(image_name).stem}_leaf_area_binary{Path(image_name).suffix}"
+        )
+        leaf.lesion_binary.save(
+            lesion_area_binaries_path / f"{Path(image_name).stem}_lesion_area_binary{Path(image_name).suffix}"
+        )
 
-        test_image_leaf_area = Image.open(
-            f"{tmpdirname}/new_output_images/leaf_area_binaries/{Path(image_name).stem}_leaf_area_binary{Path(image_name).suffix}"
-        )
-        test_image_lesion_area = Image.open(
-            f"{tmpdirname}/new_output_images/lesion_area_binaries/{Path(image_name).stem}_lesion_area_binary{Path(image_name).suffix}"
-        )
-        test_fixture_leaf_area = Image.open(
-            f"./tests/fixtures/output_images/leaf_area_binaries/{Path(image_name).stem}_leaf_area_binary{Path(image_name).suffix}"
-        )
-        test_fixture_lesion_area = Image.open(
-            f"./tests/fixtures/output_images/lesion_area_binaries/{Path(image_name).stem}_lesion_area_binary{Path(image_name).suffix}"
-        )
-        leaf_area_matches = (
-            ImageChops.difference(
-                test_image_leaf_area, test_fixture_leaf_area
-            ).getbbox()
-            is None
-        )
-        lesion_area_matches = (
-            ImageChops.difference(
-                test_image_lesion_area, test_fixture_lesion_area
-            ).getbbox()
-            is None
-        )
-        assert leaf_area_matches and lesion_area_matches
+    test_image_leaf_area = Image.open(
+        leaf_area_binaries_path / f"{Path(image_name).stem}_leaf_area_binary{Path(image_name).suffix}"
+    )
+    test_image_lesion_area = Image.open(
+        lesion_area_binaries_path / f"{Path(image_name).stem}_lesion_area_binary{Path(image_name).suffix}"
+    )
+    test_fixture_leaf_area = Image.open(
+        f"./tests/fixtures/output_images/leaf_area_binaries/{Path(image_name).stem}_leaf_area_binary{Path(image_name).suffix}"
+    )
+    test_fixture_lesion_area = Image.open(
+        f"./tests/fixtures/output_images/lesion_area_binaries/{Path(image_name).stem}_lesion_area_binary{Path(image_name).suffix}"
+    )
+    leaf_area_matches = (
+        ImageChops.difference(
+            test_image_leaf_area, test_fixture_leaf_area
+        ).getbbox()
+        is None
+    )
+    lesion_area_matches = (
+        ImageChops.difference(
+            test_image_lesion_area, test_fixture_lesion_area
+        ).getbbox()
+        is None
+    )
+    assert leaf_area_matches and lesion_area_matches
