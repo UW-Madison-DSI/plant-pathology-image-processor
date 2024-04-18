@@ -16,7 +16,7 @@ conda activate plant-pathology-image-processor
 3. Install the requirements
 
 ```bash
-pip3 install -r requirements.txt
+pip3 install -e .
 ```
 
 4. Run the streamlit app
